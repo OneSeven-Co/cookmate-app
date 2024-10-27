@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Cookmate</string>
+    <string name="Get_Started">Get Started</string>
+    <string name="Email">Email</string>
+    <string name="Password">Password</string>
+    <string name="Sign_In">Sign In</string>
+    <string name="Forgot_Password">Forgot Password?</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="home">Home</string>
+    <string name="search">Search</string>
+    <string name="create">Create</string>
+    <string name="favorites">Favorites</string>
+    <string name="profile">Profile</string>
+    <string name="new_to_cookmate">New to Cookmate?</string>
+    <string name="Sign_Up">Sign Up</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="First_Name">First Name</string>
+    <string name="Last_Name">Last Name</string>
+    <string name="login">Login</string>
+    <string name="create_account">Create Account</string>
+    <string name="recipe_name">Recipe Name</string>
+    <string name="username">Username</string>
+    <string name="recipe_published">Recipes Published</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
