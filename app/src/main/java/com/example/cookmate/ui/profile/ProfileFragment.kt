@@ -18,7 +18,7 @@ class ProfileFragment : Fragment() {
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
-    // Adapter for user's recipes
+    // Lazy initialize the adapter to avoid unnecessary object creation
     private val userRecipesAdapter by lazy {
         RecipeAdapter { recipe ->
             navigateToRecipeDetails(recipe)
@@ -55,6 +55,10 @@ class ProfileFragment : Fragment() {
         userRecipesAdapter.submitList(getSampleUserRecipes())
     }
 
+    /**
+     * sample data for testing
+     * TODO: Remove this when actual data source is implemented
+     */
     private fun getSampleUserRecipes(): List<Recipe> {
         // TODO: Replace with actual user recipes data retrieval logic
         return listOf(
@@ -114,7 +118,11 @@ class ProfileFragment : Fragment() {
             )
         )
     }
-    // Navigate to recipe details
+
+    /**
+     * Navigates to the recipe details screen
+     * TODO: use Navigation component
+     */
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
             putExtra("recipe_name", recipe.name)

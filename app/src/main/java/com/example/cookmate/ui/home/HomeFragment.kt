@@ -17,6 +17,8 @@ import com.google.android.material.chip.Chip
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    // Lazy initialize the adapter to avoid unnecessary object creation
     private val recipeAdapter by lazy {
         RecipeAdapter { recipe ->
             navigateToRecipeDetails(recipe)
@@ -75,8 +77,10 @@ class HomeFragment : Fragment() {
         recipeAdapter.submitList(filteredRecipes)
     }
 
-    // Get sample recipe data
-    //TODO: Replace with actual recipe data retrieval logic
+    /**
+     * sample data for testing
+     * TODO: Remove this when actual data source is implemented
+     */
     private fun getSampleData(): List<Recipe> {
         return listOf(
             Recipe("Recipe 1", R.drawable.ic_recipe_placeholder, "breakfast", "Easy", "10 min", "2 servings", 4.5f),
@@ -88,7 +92,10 @@ class HomeFragment : Fragment() {
         )
     }
 
-    // Navigate to recipe details
+    /**
+     * Navigates to the recipe details screen
+     * TODO: use Navigation component
+     */
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
             putExtra("recipe_name", recipe.name)
