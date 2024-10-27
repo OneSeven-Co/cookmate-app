@@ -12,7 +12,7 @@
         android:id="@+id/profilePicture"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="65dp"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_profile"
         app:layout_constraintEnd_toEndOf="parent"
@@ -39,69 +39,26 @@
     <!-- Recipes Published Label -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/recipesPublishedLabel"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:text="@string/recipe_published"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/profileName" />
 
     <!-- Recipes Published RecyclerView -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/recipesCard"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recipesRecyclerView"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:cardElevation="4dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
         app:layout_constraintTop_toBottomOf="@id/recipesPublishedLabel"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recipesRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            tools:listitem="@layout/item_recipe" />
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Favorites Label -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/favoritesLabel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/favorites"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/recipesCard"
-        android:layout_marginTop="24dp" />
-
-    <!-- Favorites RecyclerView -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/favoritesCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:cardElevation="4dp"
-        app:layout_constraintTop_toBottomOf="@id/favoritesLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/favoritesRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            tools:listitem="@layout/item_recipe" />
-    </com.google.android.material.card.MaterialCardView>
+        tools:listitem="@layout/item_recipe" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
