@@ -28,7 +28,25 @@
     <string name="create_account">Create Account</string>
     <string name="recipe_name">Recipe Name</string>
     <string name="username">Username</string>
+
+
     <string name="recipe_published">Recipes Published</string>
+    <string name="Recipe_Categories">Recipe Categories</string>
+    <string name="Explore_New_Recipes">Explore New Recipes</string>
+    <string name="create_recipe">Create Recipe</string>
+    <string name="recipe_description">Recipe Description</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="recipe_title">Recipe Title</string>
+    <string name="image_upload">Image Upload</string>
+    <string name="Add">Add</string>
+    <string name="preparation_steps">Preparation Steps</string>
+    <string name="Category">Category</string>
+    <string name="Difficulty">Difficulty</string>
+    <string name="Cooking_Time">Cooking Time</string>
+    <string name="Serving_Size">Serving Size</string>
+    <string name="Prep_Time">Prep Time</string>
+    <string name="Save_Recipe">Save Recipe</string>
+    <string name="Save_And_Publish">Save and Publish</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

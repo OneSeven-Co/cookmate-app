@@ -1,8 +1,12 @@
 package com.example.cookmate.data.model
 
 // Recipe data class
-// Contains the name of the recipe and the image resource id
 data class Recipe(
     val name: String,
-    val imageRes: Int
+    val imageRes: Int,
+    val category: String,
+    val difficulty: String? = null,
+    val time: String? = null,
+    val servings: String? = null,
+    val rating: Float = 0f
 )
