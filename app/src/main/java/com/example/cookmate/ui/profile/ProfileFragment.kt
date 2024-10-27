@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.cookmate.R
 import com.example.cookmate.databinding.FragmentProfileBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
