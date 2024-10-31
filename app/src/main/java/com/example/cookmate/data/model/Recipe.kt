@@ -8,5 +8,18 @@ data class Recipe(
     val difficulty: String? = null,
     val time: String? = null,
     val servings: String? = null,
-    val rating: Float = 0f
+    val rating: Float = 0f,
+
+    val authorId: String = ""
+)
+
+data class Ingredient(
+    val amount: String? = null,
+    val name: String? = null
+)
+
+data class AlternativeIngredient(
+    val amount: String? = null,
+    val name: String? = null,
+    val originalIngredient: String? = null
 )

@@ -242,12 +242,12 @@ class SearchFragment : Fragment() {
      */
     private fun getSampleData(): List<Recipe> {
         return listOf(
-            Recipe("Recipe 1", R.drawable.ic_recipe_placeholder, "breakfast", "Easy", "10 min", "2 servings", 4.5f),
-            Recipe("Recipe 2", R.drawable.ic_recipe_placeholder, "lunch", "Medium", "30 min", "4 servings", 4.2f),
-            Recipe("Recipe 3", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f),
-            Recipe("Recipe 4", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f),
-            Recipe("Recipe 5", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f),
-            Recipe("Recipe 6", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f)
+            Recipe("Recipe 1", R.drawable.ic_recipe_placeholder, "breakfast", "Easy", "10 min", "2 servings", 4.5f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
+            Recipe("Recipe 2", R.drawable.ic_recipe_placeholder, "lunch", "Medium", "30 min", "4 servings", 4.2f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
+            Recipe("Recipe 3", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
+            Recipe("Recipe 4", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f,""),
+            Recipe("Recipe 5", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, ""),
+            Recipe("Recipe 6", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, "")
         )
     }
 
