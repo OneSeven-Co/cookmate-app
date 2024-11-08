@@ -28,7 +28,12 @@
     <string name="create_account">Create Account</string>
     <string name="recipe_name">Recipe Name</string>
     <string name="username">Username</string>
-
+    <string name="error_empty_fields">ERROR: Not all fields have been completed!</string>
+    <string name="error_invalid_email">ERROR: Entered email is invalid!</string>
+    <string name="error_user_exists">ERROR: This user already exists!</string>
+    <string name="error_unknown">UNKNOWN ERROR!</string>
+    <string name="error_name_taken">Username is already taken. Please choose another.</string>
+    <string name="check_error">Error checking username: </string>
 
     <string name="recipe_published">Recipes Published</string>
     <string name="Recipe_Categories">Recipe Categories</string>
