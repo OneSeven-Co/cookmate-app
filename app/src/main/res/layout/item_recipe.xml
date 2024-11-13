@@ -38,7 +38,7 @@
                 android:id="@+id/recipeName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Recipe Name"
+                android:text="@string/recipe_name"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -48,7 +48,7 @@
                 android:id="@+id/recipeDifficulty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Difficulty"
+                android:text="@string/Difficulty"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp" />
 
