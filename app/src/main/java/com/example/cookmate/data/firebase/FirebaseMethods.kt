@@ -3,14 +3,13 @@ package com.example.cookmate.data.firebase
 import android.util.Log
 import com.example.cookmate.data.model.LoggedInUser
 import com.example.cookmate.data.model.Recipe
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.io.IOException
 
 object FirebaseMethods{
     var allRecipes: MutableMap<String, Recipe> =  mutableMapOf<String, Recipe>()
@@ -135,37 +134,33 @@ object FirebaseMethods{
         currentUser = LoggedInUser("0", "ERR", "nobody", null, null)
     }
 
-    fun createUser(email: String, password: String, username: String, onComplete: (Boolean) -> Unit) {
+    fun createUser(email: String, password: String, username: String, onComplete: () -> Unit) {
         val auth = Firebase.auth
         val db = Firebase.firestore.collection("users")
 
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener() {
-                task ->
-                 if (task.isSuccessful) {
-                     Log.d("Firebase Auth", "Email/Password create success")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Get the newly created user
+                    val user = auth.currentUser
 
-                     val user = LoggedInUser(
-                         userId = auth.currentUser?.uid ?: "",
-                         displayName = username,
-                         authLevel = "User",
-                         createdRecipes = mutableListOf<String>(),
-                         favoriteRecipe = mutableListOf<String>()
-                     )
+                    // Update the user's profile with the displayName
+                    val profileUpdates = userProfileChangeRequest {
+                        displayName = username
+                    }
 
-                     addToFirestore(user, "users") {
-                         userid ->
-                         if(userid != null){
-                             allUsers[userid] = user
-                             Log.d("Firebase Auth", "User add success")
-                         } else {
-                             Log.e("Firebase Auth", "Error adding account to database")
-                         }
-                     }
-                 } else {
-                     Log.e("Firebase Auth", "Error registering account")
-                     onComplete(false)
-                 }
+                    user?.updateProfile(profileUpdates)
+                        ?.addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                Log.d("CreateUser", "Display name updated successfully.")
+                                onComplete()
+                            } else {
+                                Log.e("CreateUser", "Failed to update display name", updateTask.exception)
+                            }
+                        }
+                } else {
+                    Log.e("CreateUser", "Failed to create user", task.exception)
+                }
             }
     }
 

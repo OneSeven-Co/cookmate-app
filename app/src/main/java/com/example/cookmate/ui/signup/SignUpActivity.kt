@@ -2,11 +2,13 @@ package com.example.cookmate.ui.signup
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.cookmate.R
+import com.example.cookmate.data.firebase.FirebaseMethods.createUser
 import com.example.cookmate.ui.home.HomeFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -53,32 +55,32 @@ class SignUpActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(this, R.string.error_invalid_email, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            checkIfUsernameExists(email, password, username)
+            checkIfUsernameExists(username, email, password)
         }
     }
 
-    private fun createUser(email: String, password: String, username: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    val userId = user?.uid
-
-                    if (userId != null) {
-                        fireStoreUserInit(userId, username)
-                        navigateToHomeScreen()
-                    }
-                } else {
-                    val exception = task.exception
-                    handleSignUpError(exception)
-                }
-            }
-    }
+//    private fun createUser(email: String, password: String, username: String) {
+//        Log.d("email", email)
+//        auth.createUserWithEmailAndPassword(email.lowercase().trim(), password)
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    val user = auth.currentUser
+//                    val userId = user?.uid
+//
+//                    if (userId != null) {
+//                        fireStoreUserInit(userId, username)
+//                    }
+//                } else {
+//                    val exception = task.exception
+//                    handleSignUpError(exception)
+//                }
+//            }
+//    }
 
     private fun checkIfUsernameExists(username: String, email: String, password: String) {
         firestore.collection("users")
@@ -88,7 +90,10 @@ class SignUpActivity : AppCompatActivity() {
                 if (!querySnapshot.isEmpty) {
                     Toast.makeText(this, R.string.error_name_taken, Toast.LENGTH_LONG).show()
                 } else {
-                    createUser(email, password, username)
+                    createUser(
+                        email, password, username,
+                        onComplete = { navigateToHomeScreen() }
+                    )
                 }
             }
             .addOnFailureListener { exception ->

@@ -7,23 +7,29 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.Toast
 import com.example.cookmate.ui.main.MainActivity
 import com.example.cookmate.databinding.ActivityLoginBinding
 
 import com.example.cookmate.ui.signup.SignUpActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
+    private lateinit var firebaseAuth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        firebaseAuth = FirebaseAuth.getInstance()
 
         val email = binding.emailField
         val password = binding.passwordField
@@ -73,15 +79,39 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        //TODO - Implement login logic
         loginButton.setOnClickListener {
-            loginViewModel.login(email.text.toString(), password.text.toString())
+            val emailText = email.text.toString()
+            val passwordText = password.text.toString()
 
-            // TODO: Replace this with actual login logic
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            if (emailText.isEmpty() || passwordText.isEmpty()) {
+                // Show error if fields are empty
+                if (emailText.isEmpty()) email.error = "Email cannot be empty"
+                if (passwordText.isEmpty()) password.error = "Password cannot be empty"
+                return@setOnClickListener
+            }
+
+            firebaseAuth.signInWithEmailAndPassword(emailText, passwordText)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign-in success, navigate to MainActivity
+                        val user = firebaseAuth.currentUser
+                        if (user != null) {
+                            // User is signed in
+                            Toast.makeText(this, "Welcome, ${user.email}", Toast.LENGTH_LONG).show()
+
+                            val intent = Intent(this, MainActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                    } else {
+                        // Sign-in failed, show error message
+                        val errorMessage = task.exception?.message ?: "Login failed"
+                        // Display the error to the user
+                        password.error = errorMessage
+                    }
+                }
         }
+
 
         // Navigate to SignUpActivity when "Sign Up" is clicked
         signUpLink.setOnClickListener {

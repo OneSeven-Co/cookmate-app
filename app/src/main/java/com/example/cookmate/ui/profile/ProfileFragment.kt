@@ -2,16 +2,19 @@ package com.example.cookmate.ui.profile
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cookmate.R
 import com.example.cookmate.databinding.FragmentProfileBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.ui.details.RecipeDetailsActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
     private var _binding: FragmentProfileBinding? = null
@@ -32,6 +35,19 @@ class ProfileFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        // Get FirebaseAuth instance
+        val firebaseAuth = FirebaseAuth.getInstance()
+
+        // Get the current user
+        val user = firebaseAuth.currentUser
+
+        // Get the display name
+        if (user != null) {
+            val displayName = user.displayName
+            binding.profileName.text = displayName ?: "No name available"
+        } else {
+            binding.profileName.text = "No user signed in"
+        }
         return binding.root
     }
 
