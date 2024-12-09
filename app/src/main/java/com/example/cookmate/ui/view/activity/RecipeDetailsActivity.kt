@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.details
+package com.example.cookmate.ui.view.activity
 
 import android.os.Bundle
 import android.util.Log

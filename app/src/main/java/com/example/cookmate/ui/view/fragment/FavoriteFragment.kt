@@ -1,22 +1,21 @@
-package com.example.cookmate.ui.home
+package com.example.cookmate.ui.view.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
+import com.example.cookmate.databinding.FragmentFavoriteBinding
 import com.example.cookmate.data.model.Recipe
-import com.example.cookmate.databinding.FragmentHomeBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
-import com.example.cookmate.ui.details.RecipeDetailsActivity
-import com.google.android.material.chip.Chip
+import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
 
-class HomeFragment : Fragment() {
-    private var _binding: FragmentHomeBinding? = null
+class FavoriteFragment : Fragment() {
+
+    private var _binding: FragmentFavoriteBinding? = null
     private val binding get() = _binding!!
 
     // Lazy initialize the adapter to avoid unnecessary object creation
@@ -26,68 +25,33 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // Create the fragment view
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        _binding = FragmentFavoriteBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    // Initialize the fragment view
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        setupChipGroup()
-        loadInitialData()
+        loadSampleData()
     }
 
-    // Set up the recipes RecyclerView
     private fun setupRecyclerView() {
-        binding.recipesRecyclerView.apply {
+        binding.favoritesRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recipeAdapter
         }
     }
 
-    // Set up the chip group
-    private fun setupChipGroup() {
-        binding.chipGroupCategories.setOnCheckedStateChangeListener { group, checkedIds ->
-            if (checkedIds.isEmpty()) {
-                recipeAdapter.submitList(getSampleData())
-            } else {
-                val chip = group.findViewById<Chip>(checkedIds.first())
-                val category = chip?.text?.toString()
-                filterRecipes(category)
-            }
-        }
-    }
-
-    // Load initial data
-    private fun loadInitialData() {
-        recipeAdapter.submitList(getSampleData())
-    }
-
-    // Filter recipes by category
-    private fun filterRecipes(category: String?) {
-        val filteredRecipes = getSampleData().filter { recipe ->
-            category == null || recipe.categories.contains(category)
-        }
-        recipeAdapter.submitList(filteredRecipes)
-    }
-
-    /**
-     * sample data for testing
-     * TODO: Remove this when actual data source is implemented
-     */
-    private fun getSampleData(): List<Recipe> {
-        return listOf(
+    private fun loadSampleData() {
+        val sampleRecipes = listOf(
             Recipe(
                 0, "Easy", 5f, "Test",
                 ingredients = listOf(
-                    Ingredient("5", "Bread")
+                    Ingredient("5 Slices", "Bread")
                 ), "Cook it up",
                 cookingTime = "1 hr",
                 prepTime = "1 hr",
@@ -102,6 +66,7 @@ class HomeFragment : Fragment() {
                 protein = 12f to "grams"
             )
         )
+        recipeAdapter.submitList(sampleRecipes)
     }
 
     /**
@@ -116,12 +81,11 @@ class HomeFragment : Fragment() {
             putExtra("recipe_time", recipe.prepTime)
             putExtra("recipe_servings", recipe.servingSize)
             putExtra("recipe_rating", recipe.rating)
+            putParcelableArrayListExtra("ingredients", ArrayList(recipe.ingredients))
         }
         startActivity(intent)
     }
 
-
-    // Destroy the fragment view
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

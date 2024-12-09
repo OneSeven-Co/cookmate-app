@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.profile
+package com.example.cookmate.ui.view.fragment
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,11 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.cookmate.R
 import com.example.cookmate.databinding.FragmentProfileBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
 import com.example.cookmate.data.model.Recipe
-import com.example.cookmate.ui.details.RecipeDetailsActivity
+import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
 import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {

@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.create
+package com.example.cookmate.ui.view.fragment
 
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +16,6 @@ import com.example.cookmate.databinding.ItemIngredientBinding
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
 
 class CreateFragment : Fragment() {
     private var _binding: FragmentCreateBinding? = null

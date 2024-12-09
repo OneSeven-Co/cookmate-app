@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.search
+package com.example.cookmate.ui.view.fragment
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,7 +14,7 @@ import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.databinding.FragmentSearchBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
-import com.example.cookmate.ui.details.RecipeDetailsActivity
+import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

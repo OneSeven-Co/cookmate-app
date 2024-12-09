@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.login
+package com.example.cookmate.ui.view.activity
 
 import android.content.Intent
 import androidx.lifecycle.Observer
@@ -7,14 +7,14 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import com.example.cookmate.ui.main.MainActivity
+import com.example.cookmate.MainActivity
 import com.example.cookmate.databinding.ActivityLoginBinding
+import com.example.cookmate.ui.viewmodel.LoginViewModel
+import com.example.cookmate.ui.login.LoginViewModelFactory
 
-import com.example.cookmate.ui.signup.SignUpActivity
 import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {

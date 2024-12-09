@@ -1,11 +1,10 @@
-package com.example.cookmate.ui.welcome
+package com.example.cookmate.ui.view.activity
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.cookmate.databinding.ActivityWelcomeBinding
-import com.example.cookmate.ui.login.LoginActivity
 
 class WelcomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
