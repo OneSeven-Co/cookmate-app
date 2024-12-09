@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.login
+package com.example.cookmate.ui.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,6 +8,9 @@ import com.example.cookmate.data.repository.LoginRepository
 import com.example.cookmate.data.common.Result
 
 import com.example.cookmate.R
+import com.example.cookmate.ui.login.LoggedInUserView
+import com.example.cookmate.ui.login.LoginFormState
+import com.example.cookmate.ui.login.LoginResult
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
 

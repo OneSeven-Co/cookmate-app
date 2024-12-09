@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.signup
+package com.example.cookmate.ui.view.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.cookmate.R
 import com.example.cookmate.data.firebase.FirebaseMethods.createUser
-import com.example.cookmate.ui.home.HomeFragment
+import com.example.cookmate.ui.view.fragment.HomeFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -63,24 +63,6 @@ class SignUpActivity : AppCompatActivity() {
             checkIfUsernameExists(username, email, password)
         }
     }
-
-//    private fun createUser(email: String, password: String, username: String) {
-//        Log.d("email", email)
-//        auth.createUserWithEmailAndPassword(email.lowercase().trim(), password)
-//            .addOnCompleteListener(this) { task ->
-//                if (task.isSuccessful) {
-//                    val user = auth.currentUser
-//                    val userId = user?.uid
-//
-//                    if (userId != null) {
-//                        fireStoreUserInit(userId, username)
-//                    }
-//                } else {
-//                    val exception = task.exception
-//                    handleSignUpError(exception)
-//                }
-//            }
-//    }
 
     private fun checkIfUsernameExists(username: String, email: String, password: String) {
         firestore.collection("users")
