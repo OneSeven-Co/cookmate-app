@@ -37,11 +37,11 @@ class RecipeAdapter(
 
         // Bind recipe data to the view
         fun bind(recipe: Recipe) {
-            nameView.text = recipe.name
-            imageView.setImageResource(recipe.imageRes)
+            nameView.text = recipe.title
+            recipe.imageRes?.let { imageView.setImageResource(it) }
             difficultyView.text = recipe.difficulty ?: "N/A"
-            timeView.text = recipe.time ?: "N/A"
-            servingsView.text = recipe.servings ?: "N/A"
+            timeView.text = recipe.cookingTime ?: "N/A"
+            servingsView.text = recipe.servingSize ?: "N/A"
             ratingView.text = recipe.rating.toString()
             starIcon.setImageResource(R.drawable.ic_star)
         }
@@ -60,7 +60,7 @@ class RecipeAdapter(
 
     class RecipeDiffCallback : DiffUtil.ItemCallback<Recipe>() {
         override fun areItemsTheSame(oldItem: Recipe, newItem: Recipe): Boolean {
-            return oldItem.name == newItem.name
+            return oldItem.title == newItem.title
         }
         override fun areContentsTheSame(oldItem: Recipe, newItem: Recipe): Boolean {
             return oldItem == newItem

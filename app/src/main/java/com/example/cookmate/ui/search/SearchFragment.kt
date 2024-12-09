@@ -10,6 +10,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cookmate.R
+import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.databinding.FragmentSearchBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
@@ -198,8 +199,8 @@ class SearchFragment : Fragment() {
             allRecipes
         } else {
             allRecipes.filter { recipe ->
-                recipe.name.contains(query, ignoreCase = true) ||
-                        recipe.category.contains(query, ignoreCase = true)
+                recipe.title.contains(query, ignoreCase = true) ||
+                        recipe.categories.contains(query)
             }
         }
         recipeAdapter.submitList(filteredList)
@@ -215,7 +216,7 @@ class SearchFragment : Fragment() {
             val categoryMatch = if (selectedCategories.isEmpty()) {
                 true
             } else {
-                recipe.category.lowercase() in selectedCategories.map { it.lowercase() }
+                recipe.categories.any { it.lowercase() in selectedCategories.map { selected -> selected.lowercase() } }
             }
 
             val difficultyMatch = if (selectedDifficulty == null) {
@@ -242,12 +243,23 @@ class SearchFragment : Fragment() {
      */
     private fun getSampleData(): List<Recipe> {
         return listOf(
-            Recipe("Recipe 1", R.drawable.ic_recipe_placeholder, "breakfast", "Easy", "10 min", "2 servings", 4.5f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
-            Recipe("Recipe 2", R.drawable.ic_recipe_placeholder, "lunch", "Medium", "30 min", "4 servings", 4.2f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
-            Recipe("Recipe 3", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, "NYU0SE8g35T3Kgjg9Gki1mFdhoW2"),
-            Recipe("Recipe 4", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f,""),
-            Recipe("Recipe 5", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, ""),
-            Recipe("Recipe 6", R.drawable.ic_recipe_placeholder, "dinner", "Hard", "45 min", "5 servings", 3.8f, "")
+            Recipe(
+                0, "Easy", 5f, "Test",
+                ingredients = listOf(
+                    Ingredient("5", "Bread")
+                ), "Cook it up",
+                cookingTime = "1 hr",
+                prepTime = "1 hr",
+                servingSize = "2 people",
+                categories = listOf("Breakfast"),
+                isDraft = false,
+                authorId = "123124asdasdasd",
+                recipeDescription = "Food",
+                calories = 123f,
+                fat = 12f to "grams",
+                carbs = 12f to "grams",
+                protein = 12f to "grams"
+            )
         )
     }
 
@@ -257,11 +269,11 @@ class SearchFragment : Fragment() {
      */
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
-            putExtra("recipe_name", recipe.name)
+            putExtra("recipe_name", recipe.title)
             putExtra("recipe_image", recipe.imageRes)
             putExtra("recipe_difficulty", recipe.difficulty)
-            putExtra("recipe_time", recipe.time)
-            putExtra("recipe_servings", recipe.servings)
+            putExtra("recipe_time", recipe.prepTime)
+            putExtra("recipe_servings", recipe.servingSize)
             putExtra("recipe_rating", recipe.rating)
         }
         startActivity(intent)

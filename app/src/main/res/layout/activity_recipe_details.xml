@@ -218,77 +218,12 @@
                 android:layout_marginBottom="8dp"/>
 
             <!-- Ingredient Items -->
-            <LinearLayout
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/ingredientsRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="24dp">
-
-                <!-- Ingredient Item Template (repeat as needed) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ingredient"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" (substitute)"
-                        android:textStyle="bold"
-                        android:textColor="@color/material_dynamic_primary60"
-                        android:clickable="true"
-                        android:focusable="true"/>
-                </LinearLayout>
-
-                <!-- Repeat two more times for the other ingredients -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ingredient"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" (substitute)"
-                        android:textStyle="bold"
-                        android:textColor="@color/material_dynamic_primary60"
-                        android:clickable="true"
-                        android:focusable="true"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ingredient"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" (substitute)"
-                        android:textStyle="bold"
-                        android:textColor="@color/material_dynamic_primary60"
-                        android:clickable="true"
-                        android:focusable="true"/>
-                </LinearLayout>
-            </LinearLayout>
+                android:layout_marginBottom="24dp" />
 
             <!-- Preparation Steps -->
             <TextView

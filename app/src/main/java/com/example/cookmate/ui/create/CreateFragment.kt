@@ -1,6 +1,7 @@
 package com.example.cookmate.ui.create
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,9 +9,14 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.cookmate.R
+import com.example.cookmate.data.model.Ingredient
+import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.databinding.FragmentCreateBinding
 import com.example.cookmate.databinding.ItemIngredientBinding
 import com.google.android.material.chip.Chip
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
 
 class CreateFragment : Fragment() {
     private var _binding: FragmentCreateBinding? = null
@@ -122,8 +128,8 @@ class CreateFragment : Fragment() {
         binding.ingredientsContainer.addView(ingredientView)
     }
      // Collect ingredients from input fields
-    private fun collectIngredients(): List<Pair<String, String>> {
-        val ingredients = mutableListOf<Pair<String, String>>()
+    private fun collectIngredients(): List<Ingredient> {
+        val ingredients = mutableListOf<Ingredient>()
         for (i in 0 until binding.ingredientsContainer.childCount) {
             val ingredientView = binding.ingredientsContainer.getChildAt(i)
             val ingredientBinding = ItemIngredientBinding.bind(ingredientView)
@@ -132,7 +138,7 @@ class CreateFragment : Fragment() {
             val quantity = ingredientBinding.ingredientQuantityInput.text.toString()
 
             if (name.isNotBlank() && quantity.isNotBlank()) {
-                ingredients.add(Pair(name, quantity))
+                ingredients.add(Ingredient(quantity, name))
             }
         }
         return ingredients
@@ -209,42 +215,69 @@ class CreateFragment : Fragment() {
             return
         }
 
+        val firebaseAuth = FirebaseAuth.getInstance()
+        val user = firebaseAuth.currentUser
         // Create recipe object
-        CreateRecipe(
-            title = binding.recipeTitleInput.text.toString(),
-            ingredients = collectIngredients(),
-            preparationSteps = binding.preparationStepsInput.text.toString(),
-            cookingTime = binding.timeInput.text.toString(),
-            prepTime = binding.prepTimeInput.text.toString(),
-            servingSize = binding.servingSizeInput.text.toString(),
-            categories = selectedCategories.toList(),
-            difficulty = selectedDifficulty!!,
-            isDraft = draft
+        if (user != null) {
+            val recipe = Recipe(
+                title = binding.recipeTitleInput.text.toString(),
+                ingredients = collectIngredients(),
+                preparationSteps = binding.preparationStepsInput.text.toString(),
+                cookingTime = binding.timeInput.text.toString(),
+                prepTime = binding.prepTimeInput.text.toString(),
+                servingSize = binding.servingSizeInput.text.toString(),
+                categories = selectedCategories.toList(),
+                difficulty = selectedDifficulty!!,
+                isDraft = draft,
+                authorId = user.uid,
+                imageRes = 0,
+                rating = 5f,
+                recipeDescription = "Food",
+                calories = 120f,
+                fat = 12f to "grams",
+                carbs = 12f to "grams",
+                protein = 12f to "grams"
+            )
+
+            storeRecipe(recipe)
+        }
+    }
+
+    private fun storeRecipe(recipe: Recipe) {
+        val firestore = FirebaseFirestore.getInstance()
+
+        val recipeData = hashMapOf(
+            "title" to recipe.title,
+            "ingredients" to recipe.ingredients,
+            "preparationSteps" to recipe.preparationSteps,
+            "cookingTime" to recipe.cookingTime,
+            "prepTime" to recipe.prepTime,
+            "servingSize" to recipe.servingSize,
+            "categories" to recipe.categories,
+            "difficulty" to recipe.difficulty,
+            "isDraft" to recipe.isDraft,
+            "authorId" to recipe.authorId
         )
 
-        // TODO: Implement saving to database/backend
-        Toast.makeText(
-            context,
-            if (draft) "Recipe saved as draft" else "Recipe published successfully",
-            Toast.LENGTH_SHORT
-        ).show()
+        firestore.collection("recipes")
+            .add(recipeData)
+            .addOnSuccessListener { documentReference ->
+                // Handle success
+                Log.d("Firestore", "Recipe added with ID: ${documentReference.id}")
+                Toast.makeText(
+                    context,
+                    if (recipe.isDraft) "Recipe saved as draft" else "Recipe published successfully",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            .addOnFailureListener { e ->
+                // Handle failure
+                Log.w("Firestore", "Error adding recipe", e)
+            }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
-    // CreateRecipe data class (need to be moved to the models package)
-    data class CreateRecipe(
-        val title: String,
-        val ingredients: List<Pair<String, String>>,
-        val preparationSteps: String,
-        val cookingTime: String,
-        val prepTime: String,
-        val servingSize: String,
-        val categories: List<String>,
-        val difficulty: String,
-        val isDraft: Boolean
-    )
 }

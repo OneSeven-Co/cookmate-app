@@ -1,6 +1,7 @@
 package com.example.cookmate.data.firebase
 
 import android.util.Log
+import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.LoggedInUser
 import com.example.cookmate.data.model.Recipe
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -67,23 +68,21 @@ object FirebaseMethods{
                 */
 
                 val recipe = Recipe(
-                    name = data["recipeName"] as? String ?: "",
-                    imageRes = 0,
-                    category = data["category"] as? String ?: "",
-                    difficulty = data["difficulty"] as? String ?: "",
-                    time = data["prepTime"] as? String ?: "",
-                    servings = data["servingSize"] as? String ?: "",
-                    rating = data["rating"] as? Float ?: -1f,
-                    authorId = data["recipeAuthorId"] as? String ?: ""
-
-                    /* TODO: Change Recipe data class to accommodate  this
-                    tags = data["tags"] as? MutableList<String> ?: null,
-                    instructions = data["instructions"] as? String ?: "",
-                    ingredients = ingredientsList,
-                    alternateIngredients = alt_ingredientList,
-                    cookingTime = data["cookingTime"] as? String ?: "",
-                    creationDate = (data["creationDate"] as? Timestamp ?: null)?.toDate()
-                     */
+                    0, "Easy", 5f, "Test",
+                    ingredients = listOf(
+                        Ingredient("5", "Bread")
+                    ), "Cook it up",
+                    cookingTime = "1 hr",
+                    prepTime = "1 hr",
+                    servingSize = "2 people",
+                    categories = listOf("Breakfast"),
+                    isDraft = false,
+                    authorId = "123124asdasdasd",
+                    recipeDescription = "Food",
+                    calories = 123f,
+                    fat = 12f to "grams",
+                    carbs = 12f to "grams",
+                    protein = 12f to "grams"
                 )
                 allRecipes[document.id] = recipe
             }

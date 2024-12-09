@@ -2,12 +2,10 @@ package com.example.cookmate.ui.profile
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cookmate.R
 import com.example.cookmate.databinding.FragmentProfileBinding
@@ -78,60 +76,7 @@ class ProfileFragment : Fragment() {
     private fun getSampleUserRecipes(): List<Recipe> {
         // TODO: Replace with actual user recipes data retrieval logic
         return listOf(
-            Recipe(
-                name = "My Recipe 1",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "breakfast",
-                difficulty = "Easy",
-                time = "15 min",
-                servings = "2 servings",
-                rating = 4.5f
-            ),
-            Recipe(
-                name = "My Recipe 2",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "lunch",
-                difficulty = "Medium",
-                time = "25 min",
-                servings = "4 servings",
-                rating = 4.5f
-            ),
-            Recipe(
-                name = "My Recipe 3",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "dinner",
-                difficulty = "Hard",
-                time = "45 min",
-                servings = "6 servings",
-                rating = 4.5f
-            ),
-            Recipe(
-                name = "My Recipe 4",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "dinner",
-                difficulty = "Hard",
-                time = "45 min",
-                servings = "6 servings",
-                rating = 4.5f
-            ),
-            Recipe(
-                name = "My Recipe 5",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "dinner",
-                difficulty = "Hard",
-                time = "45 min",
-                servings = "6 servings",
-                rating = 4.5f
-            ),
-            Recipe(
-                name = "My Recipe 6",
-                imageRes = R.drawable.ic_recipe_placeholder,
-                category = "dinner",
-                difficulty = "Hard",
-                time = "45 min",
-                servings = "6 servings",
-                rating = 4.5f
-            )
+
         )
     }
 
@@ -141,11 +86,11 @@ class ProfileFragment : Fragment() {
      */
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
-            putExtra("recipe_name", recipe.name)
+            putExtra("recipe_name", recipe.title)
             putExtra("recipe_image", recipe.imageRes)
             putExtra("recipe_difficulty", recipe.difficulty)
-            putExtra("recipe_time", recipe.time)
-            putExtra("recipe_servings", recipe.servings)
+            putExtra("recipe_time", recipe.prepTime)
+            putExtra("recipe_servings", recipe.servingSize)
             putExtra("recipe_rating", recipe.rating)
         }
         startActivity(intent)
