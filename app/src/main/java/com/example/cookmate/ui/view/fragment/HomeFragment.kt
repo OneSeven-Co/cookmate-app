@@ -1,26 +1,25 @@
-package com.example.cookmate.ui.profile
+package com.example.cookmate.ui.view.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.cookmate.R
-import com.example.cookmate.databinding.FragmentProfileBinding
-import com.example.cookmate.ui.adapter.RecipeAdapter
+import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
-import com.example.cookmate.ui.details.RecipeDetailsActivity
-import com.google.firebase.auth.FirebaseAuth
+import com.example.cookmate.databinding.FragmentHomeBinding
+import com.example.cookmate.ui.adapter.RecipeAdapter
+import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
+import com.google.android.material.chip.Chip
 
-class ProfileFragment : Fragment() {
-    private var _binding: FragmentProfileBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
+class HomeFragment : Fragment() {
+    private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
     // Lazy initialize the adapter to avoid unnecessary object creation
-    private val userRecipesAdapter by lazy {
+    private val recipeAdapter by lazy {
         RecipeAdapter { recipe ->
             navigateToRecipeDetails(recipe)
         }
@@ -32,27 +31,15 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentProfileBinding.inflate(inflater, container, false)
-        // Get FirebaseAuth instance
-        val firebaseAuth = FirebaseAuth.getInstance()
-
-        // Get the current user
-        val user = firebaseAuth.currentUser
-
-        // Get the display name
-        if (user != null) {
-            val displayName = user.displayName
-            binding.profileName.text = displayName ?: "No name available"
-        } else {
-            binding.profileName.text = "No user signed in"
-        }
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    // Load sample data for user's recipes
+    // Initialize the fragment view
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupChipGroup()
         loadInitialData()
     }
 
@@ -60,23 +47,59 @@ class ProfileFragment : Fragment() {
     private fun setupRecyclerView() {
         binding.recipesRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = userRecipesAdapter
+            adapter = recipeAdapter
         }
     }
 
+    // Set up the chip group
+    private fun setupChipGroup() {
+        binding.chipGroupCategories.setOnCheckedStateChangeListener { group, checkedIds ->
+            if (checkedIds.isEmpty()) {
+                recipeAdapter.submitList(getSampleData())
+            } else {
+                val chip = group.findViewById<Chip>(checkedIds.first())
+                val category = chip?.text?.toString()
+                filterRecipes(category)
+            }
+        }
+    }
+
+    // Load initial data
     private fun loadInitialData() {
-        // Load sample data for user's recipes
-        userRecipesAdapter.submitList(getSampleUserRecipes())
+        recipeAdapter.submitList(getSampleData())
+    }
+
+    // Filter recipes by category
+    private fun filterRecipes(category: String?) {
+        val filteredRecipes = getSampleData().filter { recipe ->
+            category == null || recipe.categories.contains(category)
+        }
+        recipeAdapter.submitList(filteredRecipes)
     }
 
     /**
      * sample data for testing
      * TODO: Remove this when actual data source is implemented
      */
-    private fun getSampleUserRecipes(): List<Recipe> {
-        // TODO: Replace with actual user recipes data retrieval logic
+    private fun getSampleData(): List<Recipe> {
         return listOf(
-
+            Recipe(
+                0, "Easy", 5f, "Test",
+                ingredients = listOf(
+                    Ingredient(5f, "Slices", "Bread")
+                ), "Cook it up",
+                cookingTime = "1 hr",
+                prepTime = "1 hr",
+                servingSize = "2 people",
+                categories = listOf("Breakfast"),
+                isDraft = false,
+                authorId = "123124asdasdasd",
+                recipeDescription = "Food",
+                calories = 123f to "kcal",
+                fat = 12f to "grams",
+                carbs = 12f to "grams",
+                protein = 12f to "grams"
+            )
         )
     }
 
@@ -101,6 +124,8 @@ class ProfileFragment : Fragment() {
         startActivity(intent)
     }
 
+
+    // Destroy the fragment view
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

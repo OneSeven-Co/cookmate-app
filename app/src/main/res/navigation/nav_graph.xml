@@ -7,31 +7,31 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.cookmate.ui.home.HomeFragment"
+        android:name="com.example.cookmate.ui.view.fragment.HomeFragment"
         android:label="Home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/searchFragment"
-        android:name="com.example.cookmate.ui.search.SearchFragment"
+        android:name="com.example.cookmate.ui.view.fragment.SearchFragment"
         android:label="Search"
         tools:layout="@layout/fragment_search" />
 
     <fragment
         android:id="@+id/createFragment"
-        android:name="com.example.cookmate.ui.create.CreateFragment"
+        android:name="com.example.cookmate.ui.view.fragment.CreateFragment"
         android:label="Create"
         tools:layout="@layout/fragment_create" />
 
     <fragment
         android:id="@+id/favoriteFragment"
-        android:name="com.example.cookmate.ui.favorite.FavoriteFragment"
+        android:name="com.example.cookmate.ui.view.fragment.FavoriteFragment"
         android:label="Favorites"
         tools:layout="@layout/fragment_favorite" />
 
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.example.cookmate.ui.profile.ProfileFragment"
+        android:name="com.example.cookmate.ui.view.fragment.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 </navigation>

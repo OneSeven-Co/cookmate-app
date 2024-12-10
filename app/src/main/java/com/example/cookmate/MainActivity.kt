@@ -1,10 +1,9 @@
-package com.example.cookmate.ui.main
+package com.example.cookmate
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import com.example.cookmate.R
 import com.example.cookmate.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {

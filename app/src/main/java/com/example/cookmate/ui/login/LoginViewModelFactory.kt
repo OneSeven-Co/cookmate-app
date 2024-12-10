@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.cookmate.data.source.LoginDataSource
 import com.example.cookmate.data.repository.LoginRepository
+import com.example.cookmate.ui.viewmodel.LoginViewModel
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.
