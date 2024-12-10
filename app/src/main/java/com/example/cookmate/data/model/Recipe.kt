@@ -29,7 +29,7 @@ data class Recipe(
 @Parcelize
 data class Ingredient(
     val amount: Float = 0f, //Initialized to 0, must be > 0 when submitting recipes in creation
-    val unit: String? = null, //Nullable just to prevent awkward units (what's the unit of measurement for "1 melon"?)
-    val name: String,
-    val substitutes: List<String>? = null, //Will populate with Ingredient names in Firestore in a relational manner and load clientside with a query
+    val unit: String? = "", //Nullable just to prevent awkward units (what's the unit of measurement for "1 melon"?)
+    val name: String = "",
+    val substitutes: List<String>? = emptyList(), //Will populate with Ingredient names in Firestore in a relational manner and load clientside with a query
 ) : Parcelable

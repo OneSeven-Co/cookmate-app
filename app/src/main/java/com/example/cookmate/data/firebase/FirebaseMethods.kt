@@ -12,6 +12,7 @@ import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
@@ -209,14 +210,14 @@ object FirebaseMethods{
     }
 
     //Function to get all ingredients from Firestore
-    fun getAllIngredients(onResult: (List<Map<String, Any>>) -> Unit) {
+    fun getAllIngredients(onResult: (List<Ingredient>) -> Unit) {
 
         val db = FirebaseFirestore.getInstance()
 
         db.collection("ingredients")
             .get()
             .addOnSuccessListener { documents ->
-                val ingredients = documents.map { it.data }
+                val ingredients = documents.map { it.toObject(Ingredient::class.java) }
                 onResult(ingredients)
             }
             .addOnFailureListener { exception ->

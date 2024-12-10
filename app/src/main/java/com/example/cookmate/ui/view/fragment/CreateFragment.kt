@@ -1,6 +1,7 @@
 package com.example.cookmate.ui.view.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.cookmate.R
+import com.example.cookmate.data.firebase.FirebaseMethods.getAllIngredients
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.databinding.FragmentCreateBinding
@@ -21,6 +23,7 @@ class CreateFragment : Fragment() {
     private val binding get() = _binding!!
     private val selectedCategories = mutableListOf<String>()
     private var selectedDifficulty: String? = null
+    private lateinit var ingredientsList: List<Ingredient>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -128,29 +131,40 @@ class CreateFragment : Fragment() {
         binding.addIngredientButton.isEnabled = false
 
         //TODO: This is where we should call for the ingredients list
-        val items = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry","Edler","Egg", "Fig", "Grape", "Honeydew")
 
-        val adapter = ArrayAdapter(ingredientView.context, android.R.layout.simple_dropdown_item_1line,items)
-        ingredientBinding.ingredientNameInput.setAdapter(adapter)
-        ingredientBinding.ingredientNameInput.threshold = 1
+        getAllIngredients { ingredients ->
+            // Extract ingredient names
+            val ingredientNames = ingredients.map { it.name.lowercase() }
+            ingredientsList = ingredients
 
-        //disable button when the user gives invalid input
-        ingredientBinding.ingredientNameInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) { // User finished editing
-                val input = ingredientBinding.ingredientNameInput.text.toString()
-                if (!items.contains(input)) {
-                    // Clear invalid input
-                    ingredientBinding.ingredientNameInput.setText("")
-                    ingredientBinding.ingredientNameInput.error = "Please select a valid option."
-                } else {
-                    binding.addIngredientButton.isEnabled = true
+            // Set up the adapter with the ingredient names
+            val adapter = ArrayAdapter(
+                ingredientView.context,
+                android.R.layout.simple_dropdown_item_1line,
+                ingredientNames
+            )
+            ingredientBinding.ingredientNameInput.setAdapter(adapter)
+            ingredientBinding.ingredientNameInput.threshold = 1
+
+            // Disable button when the user gives invalid input
+            ingredientBinding.ingredientNameInput.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) { // User finished editing
+                    val input = ingredientBinding.ingredientNameInput.text.toString().lowercase()
+                    if (!ingredientNames.contains(input)) {
+                        // Clear invalid input
+                        ingredientBinding.ingredientNameInput.setText("")
+                        ingredientBinding.ingredientNameInput.error = "Please select a valid option."
+                    } else {
+                        binding.addIngredientButton.isEnabled = true
+                    }
                 }
             }
         }
 
         binding.ingredientsContainer.addView(ingredientView)
     }
-     // Collect ingredients from input fields
+
+    // Collect ingredients from input fields
     private fun collectIngredients(): List<Ingredient> {
         val ingredients = mutableListOf<Ingredient>()
         for (i in 0 until binding.ingredientsContainer.childCount) {
@@ -158,17 +172,31 @@ class CreateFragment : Fragment() {
             val ingredientBinding = ItemIngredientBinding.bind(ingredientView)
 
             val name = ingredientBinding.ingredientNameInput.text.toString()
-            val quantity = ingredientBinding.ingredientQuantityInput.text.toString().toFloat()
+            val quantityString = ingredientBinding.ingredientQuantityInput.text.toString()
+            var quantity = 0f
+            if (quantityString.isBlank()) {
+                quantity = 0f
+            }else {
+                quantity = quantityString.toFloat()
+            }
 
-            if (name.isNotBlank() && quantity > 0) {
-                ingredients.add(Ingredient(
-                    amount = quantity,
-                    unit = TODO(),
-                    name = name,
-                    substitutes = TODO()
-                ))
+            val currentIngredient = ingredientsList.find { it.name == name }
+            Log.d("current", currentIngredient.toString())
+            Log.d("name", name)
+            Log.d("quantity", quantity.toString())
+
+            if (name.isNotBlank()) {
+                if (currentIngredient != null) {
+                    ingredients.add(Ingredient(
+                        amount = quantity,
+                        unit = currentIngredient.unit,
+                        name = name,
+                        substitutes = currentIngredient.substitutes
+                    ))
+                }
             }
         }
+        Log.d("ingredients", ingredients.toString())
         return ingredients
     }
 
