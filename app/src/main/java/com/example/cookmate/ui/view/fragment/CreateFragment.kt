@@ -1,4 +1,4 @@
-package com.example.cookmate.ui.create
+package com.example.cookmate.ui.view.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -111,6 +111,7 @@ class CreateFragment : Fragment() {
             addNewIngredientField()
         }
         addNewIngredientField()
+
     }
 
     // Add new ingredient input field
@@ -121,6 +122,30 @@ class CreateFragment : Fragment() {
         // Setup remove button
         ingredientBinding.removeIngredientButton.setOnClickListener {
             binding.ingredientsContainer.removeView(ingredientView)
+            binding.addIngredientButton.isEnabled = binding.ingredientsContainer.childCount >= 0
+        }
+
+        binding.addIngredientButton.isEnabled = false
+
+        //TODO: This is where we should call for the ingredients list
+        val items = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry","Edler","Egg", "Fig", "Grape", "Honeydew")
+
+        val adapter = ArrayAdapter(ingredientView.context, android.R.layout.simple_dropdown_item_1line,items)
+        ingredientBinding.ingredientNameInput.setAdapter(adapter)
+        ingredientBinding.ingredientNameInput.threshold = 1
+
+        //disable button when the user gives invalid input
+        ingredientBinding.ingredientNameInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) { // User finished editing
+                val input = ingredientBinding.ingredientNameInput.text.toString()
+                if (!items.contains(input)) {
+                    // Clear invalid input
+                    ingredientBinding.ingredientNameInput.setText("")
+                    ingredientBinding.ingredientNameInput.error = "Please select a valid option."
+                } else {
+                    binding.addIngredientButton.isEnabled = true
+                }
+            }
         }
 
         binding.ingredientsContainer.addView(ingredientView)

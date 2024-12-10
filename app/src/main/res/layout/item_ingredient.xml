@@ -5,7 +5,7 @@
     android:orientation="horizontal"
     android:layout_marginBottom="8dp">
 
-    <com.google.android.material.textfield.TextInputLayout
+    <!--<com.google.android.material.textfield.TextInputLayout
         android:id="@+id/ingredientNameLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -16,6 +16,24 @@
             android:id="@+id/ingredientNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>-->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/ingredientNameLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:layout_marginEnd="8dp"
+        android:hint="Ingredient">
+
+        <AutoCompleteTextView
+            android:id="@+id/ingredientNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:inputType="text"
+            android:background="@android:drawable/editbox_background"
+            android:dropDownWidth="match_parent"
+            android:dropDownHorizontalOffset="0dp"
+            android:dropDownVerticalOffset="8dp"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
