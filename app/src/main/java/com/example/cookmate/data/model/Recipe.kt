@@ -20,7 +20,7 @@ data class Recipe(
     val isDraft: Boolean,
     val authorId: String,
     val recipeDescription: String,
-    val calories: Float,
+    val calories: Pair<Float, String>,
     val fat: Pair<Float, String>,
     val carbs: Pair<Float, String>,
     val protein: Pair<Float, String>,
@@ -28,13 +28,8 @@ data class Recipe(
 
 @Parcelize
 data class Ingredient(
-    val amount: String? = null,
-    val name: String? = null,
-    val substitute: Ingredient? = null,
+    val amount: Float = 0f, //Initialized to 0, must be > 0 when submitting recipes in creation
+    val unit: String? = null, //Nullable just to prevent awkward units (what's the unit of measurement for "1 melon"?)
+    val name: String,
+    val substitutes: List<String>? = null, //Will populate with Ingredient names in Firestore in a relational manner and load clientside with a query
 ) : Parcelable
-
-data class AlternativeIngredient(
-    val amount: String? = null,
-    val name: String? = null,
-    val originalIngredient: String? = null
-)

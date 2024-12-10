@@ -19,8 +19,8 @@ class IngredientsAdapter(private val ingredients: List<Ingredient>) :
         fun bind(ingredient: Ingredient) {
             "${ingredient.name} - ".also { ingredientName.text = it }
             "${ingredient.amount} - ".also { ingredientAmount.text = it }
-            if (ingredient.substitute != null) {
-                " (${ingredient.substitute})".also { ingredientSubstitute.text = it }
+            if (ingredient.substitutes != null) {
+                " (${ingredient.substitutes})".also { ingredientSubstitute.text = it }
                 ingredientSubstitute.visibility = View.VISIBLE
             } else {
                 ingredientSubstitute.visibility = View.GONE

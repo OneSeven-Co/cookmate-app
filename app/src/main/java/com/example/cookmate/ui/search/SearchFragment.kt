@@ -246,7 +246,7 @@ class SearchFragment : Fragment() {
             Recipe(
                 0, "Easy", 5f, "Test",
                 ingredients = listOf(
-                    Ingredient("5", "Bread")
+                    Ingredient(5f, "Slices", "Bread")
                 ), "Cook it up",
                 cookingTime = "1 hr",
                 prepTime = "1 hr",
@@ -255,7 +255,7 @@ class SearchFragment : Fragment() {
                 isDraft = false,
                 authorId = "123124asdasdasd",
                 recipeDescription = "Food",
-                calories = 123f,
+                calories = 123f to "kcal",
                 fat = 12f to "grams",
                 carbs = 12f to "grams",
                 protein = 12f to "grams"
@@ -275,6 +275,11 @@ class SearchFragment : Fragment() {
             putExtra("recipe_time", recipe.prepTime)
             putExtra("recipe_servings", recipe.servingSize)
             putExtra("recipe_rating", recipe.rating)
+            putExtra("calories", recipe.calories)
+            putExtra("fat", recipe.fat)
+            putExtra("carbs", recipe.carbs)
+            putExtra("protein", recipe.protein)
+            putParcelableArrayListExtra("ingredients", ArrayList(recipe.ingredients))
         }
         startActivity(intent)
     }

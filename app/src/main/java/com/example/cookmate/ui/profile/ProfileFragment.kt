@@ -92,6 +92,11 @@ class ProfileFragment : Fragment() {
             putExtra("recipe_time", recipe.prepTime)
             putExtra("recipe_servings", recipe.servingSize)
             putExtra("recipe_rating", recipe.rating)
+            putExtra("calories", recipe.calories)
+            putExtra("fat", recipe.fat)
+            putExtra("carbs", recipe.carbs)
+            putExtra("protein", recipe.protein)
+            putParcelableArrayListExtra("ingredients", ArrayList(recipe.ingredients))
         }
         startActivity(intent)
     }

@@ -1,7 +1,6 @@
 package com.example.cookmate.ui.create
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,8 +14,7 @@ import com.example.cookmate.databinding.FragmentCreateBinding
 import com.example.cookmate.databinding.ItemIngredientBinding
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
+import com.example.cookmate.data.firebase.FirebaseMethods.storeRecipe
 
 class CreateFragment : Fragment() {
     private var _binding: FragmentCreateBinding? = null
@@ -135,10 +133,15 @@ class CreateFragment : Fragment() {
             val ingredientBinding = ItemIngredientBinding.bind(ingredientView)
 
             val name = ingredientBinding.ingredientNameInput.text.toString()
-            val quantity = ingredientBinding.ingredientQuantityInput.text.toString()
+            val quantity = ingredientBinding.ingredientQuantityInput.text.toString().toFloat()
 
-            if (name.isNotBlank() && quantity.isNotBlank()) {
-                ingredients.add(Ingredient(quantity, name))
+            if (name.isNotBlank() && quantity > 0) {
+                ingredients.add(Ingredient(
+                    amount = quantity,
+                    unit = TODO(),
+                    name = name,
+                    substitutes = TODO()
+                ))
             }
         }
         return ingredients
@@ -232,48 +235,21 @@ class CreateFragment : Fragment() {
                 authorId = user.uid,
                 imageRes = 0,
                 rating = 5f,
-                recipeDescription = "Food",
-                calories = 120f,
-                fat = 12f to "grams",
-                carbs = 12f to "grams",
-                protein = 12f to "grams"
+                recipeDescription = binding.descriptionInput.text.toString(),
+                calories = binding.caloriesInput.text.toString().toFloat() to "kcal",
+                fat = binding.fatInput.text.toString().toFloat() to "Grams",
+                carbs = binding.carbohydratesInput.text.toString().toFloat() to "Grams",
+                protein = binding.proteinInput.text.toString().toFloat() to "Grams"
             )
 
-            storeRecipe(recipe)
+            storeRecipe(recipe) { result ->
+                if (result) {
+                    Toast.makeText(context, "Recipe saved successfully!", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Failed to save recipe.", Toast.LENGTH_LONG).show()
+                }
+            }
         }
-    }
-
-    private fun storeRecipe(recipe: Recipe) {
-        val firestore = FirebaseFirestore.getInstance()
-
-        val recipeData = hashMapOf(
-            "title" to recipe.title,
-            "ingredients" to recipe.ingredients,
-            "preparationSteps" to recipe.preparationSteps,
-            "cookingTime" to recipe.cookingTime,
-            "prepTime" to recipe.prepTime,
-            "servingSize" to recipe.servingSize,
-            "categories" to recipe.categories,
-            "difficulty" to recipe.difficulty,
-            "isDraft" to recipe.isDraft,
-            "authorId" to recipe.authorId
-        )
-
-        firestore.collection("recipes")
-            .add(recipeData)
-            .addOnSuccessListener { documentReference ->
-                // Handle success
-                Log.d("Firestore", "Recipe added with ID: ${documentReference.id}")
-                Toast.makeText(
-                    context,
-                    if (recipe.isDraft) "Recipe saved as draft" else "Recipe published successfully",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            .addOnFailureListener { e ->
-                // Handle failure
-                Log.w("Firestore", "Error adding recipe", e)
-            }
     }
 
     override fun onDestroyView() {

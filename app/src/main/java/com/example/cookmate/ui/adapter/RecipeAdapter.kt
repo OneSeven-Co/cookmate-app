@@ -42,7 +42,7 @@ class RecipeAdapter(
             difficultyView.text = recipe.difficulty ?: "N/A"
             timeView.text = recipe.cookingTime ?: "N/A"
             servingsView.text = recipe.servingSize ?: "N/A"
-            ratingView.text = recipe.rating.toString()
+            recipe.rating.toString().also { ratingView.text = it }
             starIcon.setImageResource(R.drawable.ic_star)
         }
     }

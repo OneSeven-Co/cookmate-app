@@ -1,6 +1,7 @@
 package com.example.cookmate.data.firebase
 
 import android.util.Log
+import android.widget.Toast
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.LoggedInUser
 import com.example.cookmate.data.model.Recipe
@@ -8,9 +9,11 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.tasks.await
 
 object FirebaseMethods{
     var allRecipes: MutableMap<String, Recipe> =  mutableMapOf<String, Recipe>()
@@ -36,59 +39,6 @@ object FirebaseMethods{
             onComplete(true)
         } .addOnFailureListener {
             exception -> Log.e("Firestore", "Error getting user documents", exception)
-            onComplete(false)
-        }
-    }
-
-    fun getAllRecipes(onComplete: (Boolean) -> Unit) {
-        val db = Firebase.firestore.collection("recipes")
-
-        db.get().addOnSuccessListener {
-                result ->
-            for (document in result) {
-                val data = document.data ?: emptyMap<String, Any>()
-
-                /* TODO: Change Recipe data class to accommodate  this
-                val ingredientsList = (data["ingredients"] as? List<Map<String, Any>>)?.map {
-                    ingredientMap ->
-                    Ingredient(
-                        amount = ingredientMap["amount"] as? String ?: "",
-                        name = ingredientMap["name"] as? String ?: ""
-                    )
-                } ?: emptyList()
-
-                val alt_ingredientsList = (data["alternativeIngredients"] as? List<Map<String, Any>>)?.map {
-                    ingredientMap ->
-                    Ingredient(
-                        amount = ingredientMap["amount"] as? String ?: "",
-                        name = ingredientMap["name"] as? String ?: "",
-                        originalIngredient = ingredientMap["originalIngredient"] as? String?: ""
-                    )
-                } ?: emptyList()
-                */
-
-                val recipe = Recipe(
-                    0, "Easy", 5f, "Test",
-                    ingredients = listOf(
-                        Ingredient("5", "Bread")
-                    ), "Cook it up",
-                    cookingTime = "1 hr",
-                    prepTime = "1 hr",
-                    servingSize = "2 people",
-                    categories = listOf("Breakfast"),
-                    isDraft = false,
-                    authorId = "123124asdasdasd",
-                    recipeDescription = "Food",
-                    calories = 123f,
-                    fat = 12f to "grams",
-                    carbs = 12f to "grams",
-                    protein = 12f to "grams"
-                )
-                allRecipes[document.id] = recipe
-            }
-            onComplete(true)
-        } .addOnFailureListener {
-                exception -> Log.e("Firestore", "Error getting recipe documents", exception)
             onComplete(false)
         }
     }
@@ -178,6 +128,40 @@ object FirebaseMethods{
             }
     }
 
+    fun storeRecipe(recipe: Recipe, callback: (Boolean) -> Unit){
+
+        val firestore = FirebaseFirestore.getInstance()
+
+        val recipeData = hashMapOf(
+            "title" to recipe.title,
+            "ingredients" to recipe.ingredients,
+            "preparationSteps" to recipe.preparationSteps,
+            "cookingTime" to recipe.cookingTime,
+            "prepTime" to recipe.prepTime,
+            "servingSize" to recipe.servingSize,
+            "categories" to recipe.categories,
+            "difficulty" to recipe.difficulty,
+            "isDraft" to recipe.isDraft,
+            "authorId" to recipe.authorId,
+            "imageRes" to recipe.imageRes,
+            "rating" to recipe.rating,
+            "recipeDescription" to recipe.recipeDescription,
+            "calories" to recipe.calories,
+            "fat" to recipe.fat,
+            "carbs" to recipe.carbs,
+            "protein" to recipe.protein
+        )
+
+        firestore.collection("recipes")
+            .add(recipeData)
+            .addOnSuccessListener {
+                callback(true)
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
     fun updateAField(id: String, collection: String, fieldToUpdate: String, updateValue: Any ,onComplete:(Boolean) -> Unit){
         val ref = com.google.firebase.Firebase.firestore.collection(collection).document(id)
 
@@ -203,6 +187,41 @@ object FirebaseMethods{
                     exception ->
                 Log.e("Firestore Delete", "Delete for $id failed", exception)
                 onComplete(false)
+            }
+    }
+
+    // Function to query recipes for the current user
+    fun getRecipesForCurrentUser(currentUserId: String, onResult: (List<Map<String, Any>>) -> Unit) {
+
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("recipes")
+            .whereEqualTo("authorId", currentUserId)
+            .get()
+            .addOnSuccessListener { documents ->
+                val recipes = documents.map { it.data }
+                onResult(recipes)
+            }
+            .addOnFailureListener { exception ->
+                exception.printStackTrace()
+                onResult(emptyList())
+            }
+    }
+
+    //Function to get all ingredients from Firestore
+    fun getAllIngredients(onResult: (List<Map<String, Any>>) -> Unit) {
+
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("ingredients")
+            .get()
+            .addOnSuccessListener { documents ->
+                val ingredients = documents.map { it.data }
+                onResult(ingredients)
+            }
+            .addOnFailureListener { exception ->
+                exception.printStackTrace()
+                onResult(emptyList())
             }
     }
 }
