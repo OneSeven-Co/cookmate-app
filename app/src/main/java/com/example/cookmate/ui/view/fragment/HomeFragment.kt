@@ -5,13 +5,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
+import com.example.cookmate.data.repository.RecipeRepository
 import com.example.cookmate.databinding.FragmentHomeBinding
 import com.example.cookmate.ui.adapter.RecipeAdapter
 import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
+import com.example.cookmate.ui.viewmodel.HomeViewModel
+import com.example.cookmate.ui.viewmodel.HomeViewModelFactory
 import com.google.android.material.chip.Chip
 
 class HomeFragment : Fragment() {
@@ -23,6 +29,11 @@ class HomeFragment : Fragment() {
         RecipeAdapter { recipe ->
             navigateToRecipeDetails(recipe)
         }
+    }
+
+    // Add ViewModel
+    private val viewModel: HomeViewModel by viewModels {
+        HomeViewModelFactory(RecipeRepository())
     }
 
     // Create the fragment view
@@ -40,7 +51,8 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupChipGroup()
-        loadInitialData()
+        setupObservers()
+        viewModel.loadPublishedRecipes()
     }
 
     // Set up the recipes RecyclerView
@@ -55,52 +67,29 @@ class HomeFragment : Fragment() {
     private fun setupChipGroup() {
         binding.chipGroupCategories.setOnCheckedStateChangeListener { group, checkedIds ->
             if (checkedIds.isEmpty()) {
-                recipeAdapter.submitList(getSampleData())
+                viewModel.loadPublishedRecipes()
             } else {
                 val chip = group.findViewById<Chip>(checkedIds.first())
-                val category = chip?.text?.toString()
-                filterRecipes(category)
+                chip?.text?.toString()?.let { category ->
+                    viewModel.loadRecipesByCategory(category)
+                }
             }
         }
     }
 
-    // Load initial data
-    private fun loadInitialData() {
-        recipeAdapter.submitList(getSampleData())
-    }
-
-    // Filter recipes by category
-    private fun filterRecipes(category: String?) {
-        val filteredRecipes = getSampleData().filter { recipe ->
-            category == null || recipe.categories.contains(category)
+    // Set up observers
+    private fun setupObservers() {
+        viewModel.recipes.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { recipes ->
+                recipeAdapter.submitList(recipes)
+            }.onFailure { exception ->
+                Toast.makeText(
+                    context,
+                    "Error loading recipes: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
-        recipeAdapter.submitList(filteredRecipes)
-    }
-
-    /**
-     * sample data for testing
-     * TODO: Remove this when actual data source is implemented
-     */
-    private fun getSampleData(): List<Recipe> {
-        return listOf(
-            Recipe(
-                0, "Easy", 5f, "Test",
-                ingredients = listOf(
-                    Ingredient(5f, "Slices", "Bread")
-                ), "Cook it up",
-                cookingTime = "1 hr",
-                prepTime = "1 hr",
-                servingSize = "2 people",
-                categories = listOf("Breakfast"),
-                isDraft = false,
-                authorId = "123124asdasdasd",
-                recipeDescription = "Food",
-                calories = 123f to "kcal",
-                fat = 12f to "grams",
-                carbs = 12f to "grams",
-                protein = 12f to "grams"
-            )
-        )
     }
 
     /**
@@ -110,6 +99,7 @@ class HomeFragment : Fragment() {
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
             putExtra("recipe_name", recipe.title)
+            putExtra("recipe_image_url", recipe.imageUrl)
             putExtra("recipe_image", recipe.imageRes)
             putExtra("recipe_difficulty", recipe.difficulty)
             putExtra("recipe_time", recipe.prepTime)

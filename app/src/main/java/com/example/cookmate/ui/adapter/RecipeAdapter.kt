@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.cookmate.R
 import com.example.cookmate.data.model.Recipe
 
@@ -38,7 +39,32 @@ class RecipeAdapter(
         // Bind recipe data to the view
         fun bind(recipe: Recipe) {
             nameView.text = recipe.title
-            recipe.imageRes?.let { imageView.setImageResource(it) }
+            
+            // Handle image loading
+            when {
+                recipe.imageUrl != null -> {
+                    // Load from URL
+                    Glide.with(imageView.context)
+                        .load(recipe.imageUrl)
+                        .placeholder(R.drawable.ic_recipe_placeholder)
+                        .error(R.drawable.ic_recipe_placeholder)
+                        .into(imageView)
+                }
+                recipe.imageRes != null && recipe.imageRes != 0 -> {
+                    // Load from resource ID
+                    Glide.with(imageView.context)
+                        .load(recipe.imageRes)
+                        .placeholder(R.drawable.ic_recipe_placeholder)
+                        .error(R.drawable.ic_recipe_placeholder)
+                        .into(imageView)
+                }
+                else -> {
+                    // Fallback to placeholder
+                    imageView.setImageResource(R.drawable.ic_recipe_placeholder)
+                }
+            }
+
+            // Rest of the binding code
             difficultyView.text = recipe.difficulty ?: "N/A"
             timeView.text = recipe.cookingTime ?: "N/A"
             servingsView.text = recipe.servingSize ?: "N/A"

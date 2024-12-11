@@ -68,12 +68,37 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.firebase.storage)
 
     //Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    implementation (libs.androidx.lifecycle.viewmodel.ktx.v287)
+    implementation (libs.androidx.lifecycle.livedata.ktx.v287)
+    implementation (libs.androidx.fragment.ktx)
+
     //GSON
     implementation (libs.gson)
+
+    //Coroutines
+    implementation (libs.kotlinx.coroutines.android)
+    implementation (libs.kotlinx.coroutines.play.services)
+
+    implementation (libs.androidx.fragment.ktx)
+    implementation (libs.androidx.activity.ktx)
+
+    //Glide
+    implementation (libs.glide)
+
+    //uCrop
+    implementation(libs.ucrop)
+
+    //ktx
+    // Firebase KTX
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.google.firebase.auth.ktx)
+    implementation(libs.google.firebase.firestore.ktx)
+
 }

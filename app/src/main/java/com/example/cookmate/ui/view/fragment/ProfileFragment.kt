@@ -12,6 +12,11 @@ import com.example.cookmate.ui.adapter.RecipeAdapter
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
 import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
+import androidx.fragment.app.viewModels
+import com.example.cookmate.data.repository.RecipeRepository
+import com.example.cookmate.ui.viewmodel.ProfileViewModel
+import com.example.cookmate.ui.viewmodel.ProfileViewModelFactory
 
 class ProfileFragment : Fragment() {
     private var _binding: FragmentProfileBinding? = null
@@ -23,6 +28,11 @@ class ProfileFragment : Fragment() {
         RecipeAdapter { recipe ->
             navigateToRecipeDetails(recipe)
         }
+    }
+
+    // Add ViewModel
+    private val viewModel: ProfileViewModel by viewModels { 
+        ProfileViewModelFactory(RecipeRepository()) 
     }
 
     // Create the fragment view
@@ -52,7 +62,12 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        loadInitialData()
+        setupObservers()
+        
+        // Load current user's recipes
+        FirebaseAuth.getInstance().currentUser?.let { user ->
+            viewModel.loadUserRecipes(user.uid)
+        }
     }
 
     // Set up the recipes RecyclerView
@@ -63,20 +78,18 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun loadInitialData() {
-        // Load sample data for user's recipes
-        userRecipesAdapter.submitList(getSampleUserRecipes())
-    }
-
-    /**
-     * sample data for testing
-     * TODO: Remove this when actual data source is implemented
-     */
-    private fun getSampleUserRecipes(): List<Recipe> {
-        // TODO: Replace with actual user recipes data retrieval logic
-        return listOf(
-
-        )
+    private fun setupObservers() {
+        viewModel.recipes.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { recipes ->
+                userRecipesAdapter.submitList(recipes)
+            }.onFailure { exception ->
+                Toast.makeText(
+                    context,
+                    "Error loading recipes: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     /**
