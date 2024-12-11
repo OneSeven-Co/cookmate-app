@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.databinding.ActivityRecipeDetailsBinding
@@ -52,7 +53,17 @@ class RecipeDetailsActivity : AppCompatActivity() {
         // Get recipe details from intent
         intent.extras?.let { bundle ->
             binding.recipeName.text = bundle.getString("recipe_name", "")
-            binding.recipeImage.setImageResource(bundle.getInt("recipe_image", R.drawable.ic_recipe_placeholder))
+            val imageUrl = bundle.getString("recipe_image_url")
+            if (imageUrl != null) {
+                Glide.with(this)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_recipe_placeholder)
+                    .into(binding.recipeImage)
+            } else {
+                binding.recipeImage.setImageResource(
+                    bundle.getInt("recipe_image", R.drawable.ic_recipe_placeholder)
+                )
+            }
 
             // Set cooking info
             binding.prepTimeValue.text = bundle.getString("recipe_time", "N/A")

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
@@ -18,6 +19,10 @@ import com.example.cookmate.ui.view.activity.RecipeDetailsActivity
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.example.cookmate.data.repository.RecipeRepository
+import com.example.cookmate.ui.viewmodel.SearchViewModel
+import com.example.cookmate.ui.viewmodel.SearchViewModelFactory
+import android.widget.Toast
 
 /**
  * SearchFragment handles the search functionality of the app, including:
@@ -43,6 +48,11 @@ class SearchFragment : Fragment() {
         }
     }
 
+    // Add ViewModel
+    private val viewModel: SearchViewModel by viewModels { 
+        SearchViewModelFactory(RecipeRepository()) 
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -56,7 +66,8 @@ class SearchFragment : Fragment() {
         setupRecyclerView()
         setupSearchBar()
         setupFilterIcon()
-        loadInitialData()
+        setupObservers()
+        viewModel.loadPublishedRecipes()
     }
 
     /**
@@ -178,18 +189,6 @@ class SearchFragment : Fragment() {
     }
 
     /**
-     * Loads initial recipe data
-     * TODO: Replace with actual API call
-     * TODO: Should add loading state while it fetch data
-     * TODO: Add error handling
-     */
-    private fun loadInitialData() {
-        allRecipes.clear()
-        allRecipes.addAll(getSampleData())
-        recipeAdapter.submitList(allRecipes.toList())
-    }
-
-    /**
      * Filters recipes based on search query
      * TODO: move filtering logic to a different classssss
      * TODO: Add support for additional search criteria
@@ -238,29 +237,25 @@ class SearchFragment : Fragment() {
     }
 
     /**
-     * sample data for testing
-     * TODO: Remove this when actual data source is implemented
+     * Loads initial recipe data
+     * TODO: Replace with actual API call
+     * TODO: Should add loading state while it fetch data
+     * TODO: Add error handling
      */
-    private fun getSampleData(): List<Recipe> {
-        return listOf(
-            Recipe(
-                0, "Easy", 5f, "Test",
-                ingredients = listOf(
-                    Ingredient(5f, "Slices", "Bread")
-                ), "Cook it up",
-                cookingTime = "1 hr",
-                prepTime = "1 hr",
-                servingSize = "2 people",
-                categories = listOf("Breakfast"),
-                isDraft = false,
-                authorId = "123124asdasdasd",
-                recipeDescription = "Food",
-                calories = 123f to "kcal",
-                fat = 12f to "grams",
-                carbs = 12f to "grams",
-                protein = 12f to "grams"
-            )
-        )
+    private fun setupObservers() {
+        viewModel.recipes.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { recipes ->
+                allRecipes.clear()
+                allRecipes.addAll(recipes)
+                recipeAdapter.submitList(recipes)
+            }.onFailure { exception ->
+                Toast.makeText(
+                    context,
+                    "Error loading recipes: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     /**

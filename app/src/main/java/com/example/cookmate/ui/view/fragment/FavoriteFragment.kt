@@ -49,10 +49,10 @@ class FavoriteFragment : Fragment() {
     private fun loadSampleData() {
         val sampleRecipes = listOf(
             Recipe(
-                0, "Easy", 5f, "Test",
+                0, "Easy", "Hard", 2.0f,
                 ingredients = listOf(
                     Ingredient(5f, "Slices", "Bread")
-                ), "Cook it up",
+                ), title = "Cook it up",
                 cookingTime = "1 hr",
                 prepTime = "1 hr",
                 servingSize = "2 people",
@@ -63,7 +63,8 @@ class FavoriteFragment : Fragment() {
                 calories = 123f to "kcal",
                 fat = 12f to "Grams",
                 carbs = 12f to "Grams",
-                protein = 12f to "Grams"
+                protein = 12f to "Grams",
+                preparationSteps = "None"
             )
         )
         recipeAdapter.submitList(sampleRecipes)

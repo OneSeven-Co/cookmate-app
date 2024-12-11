@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 
 data class Recipe(
     val imageRes: Int? = null,
+    val imageUrl: String? = null,
     val difficulty: String? = null,
     val rating: Float = 0f,
 
