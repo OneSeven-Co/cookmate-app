@@ -1,5 +1,6 @@
 package com.example.cookmate.ui.adapter
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,10 +43,10 @@ class RecipeAdapter(
             
             // Handle image loading
             when {
-                recipe.imageUrl != null -> {
-                    // Load from URL
+                recipe.localImagePath != null -> {
+                    // Load from local URI
                     Glide.with(imageView.context)
-                        .load(recipe.imageUrl)
+                        .load(Uri.parse(recipe.localImagePath))
                         .placeholder(R.drawable.ic_recipe_placeholder)
                         .error(R.drawable.ic_recipe_placeholder)
                         .into(imageView)

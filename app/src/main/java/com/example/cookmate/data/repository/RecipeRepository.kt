@@ -25,7 +25,14 @@ class RecipeRepository : BaseRepository<Recipe> {
         try {
             val recipeData = hashMapOf(
                 "title" to recipe.title,
-                "ingredients" to recipe.ingredients,
+                "ingredients" to recipe.ingredients.map { ingredient ->
+                    mapOf(
+                        "amount" to ingredient.amount,
+                        "unit" to ingredient.unit,
+                        "name" to ingredient.name,
+                        "substitutes" to ingredient.substitutes
+                    )
+                },
                 "preparationSteps" to recipe.preparationSteps,
                 "cookingTime" to recipe.cookingTime,
                 "prepTime" to recipe.prepTime,
@@ -35,7 +42,7 @@ class RecipeRepository : BaseRepository<Recipe> {
                 "isDraft" to recipe.isDraft,
                 "authorId" to recipe.authorId,
                 "imageRes" to recipe.imageRes,
-                "imageUrl" to recipe.imageUrl,
+                "localImagePath" to recipe.localImagePath,
                 "rating" to recipe.rating,
                 "recipeDescription" to recipe.recipeDescription,
                 "calories" to recipe.calories,
@@ -47,6 +54,7 @@ class RecipeRepository : BaseRepository<Recipe> {
             val documentRef = recipesCollection.add(recipeData).await()
             emit(Result.success(documentRef.id))
         } catch (e: Exception) {
+            Log.e("RecipeRepository", "Error storing recipe", e)
             emit(Result.failure(e))
         }
     }
@@ -153,15 +161,15 @@ class RecipeRepository : BaseRepository<Recipe> {
                 try {
                     Recipe(
                         title = doc.getString("title") ?: "",
-                        ingredients = (doc.get("ingredients") as? List<*>)?.mapNotNull { 
-                            it as? HashMap<*, *>
-                        }?.map { map ->
-                            Ingredient(
-                                amount = (map["amount"] as? Number)?.toFloat() ?: 0f,
-                                unit = map["unit"] as? String,
-                                name = map["name"] as? String ?: "",
-                                substitutes = (map["substitutes"] as? List<*>)?.mapNotNull { it as? String }
-                            )
+                        ingredients = (doc.get("ingredients") as? List<*>)?.mapNotNull { ingredient ->
+                            (ingredient as? Map<*, *>)?.let {
+                                Ingredient(
+                                    amount = (it["amount"] as? Number)?.toFloat() ?: 0f,
+                                    unit = it["unit"] as? String,
+                                    name = it["name"] as? String ?: "",
+                                    substitutes = (it["substitutes"] as? List<*>)?.mapNotNull { sub -> sub as? String }
+                                )
+                            }
                         } ?: emptyList(),
                         preparationSteps = doc.getString("preparationSteps") ?: "",
                         cookingTime = doc.getString("cookingTime") ?: "",
@@ -171,7 +179,7 @@ class RecipeRepository : BaseRepository<Recipe> {
                         isDraft = doc.getBoolean("isDraft") ?: false,
                         authorId = doc.getString("authorId") ?: "",
                         imageRes = doc.getLong("imageRes")?.toInt(),
-                        imageUrl = doc.getString("imageUrl"),
+                        localImagePath = doc.getString("localImagePath"),
                         difficulty = doc.getString("difficulty"),
                         rating = (doc.getDouble("rating")?.toFloat() ?: 0f),
                         recipeDescription = doc.getString("recipeDescription") ?: "",
@@ -242,15 +250,15 @@ class RecipeRepository : BaseRepository<Recipe> {
                 try {
                     Recipe(
                         title = doc.getString("title") ?: "",
-                        ingredients = (doc.get("ingredients") as? List<*>)?.mapNotNull { 
-                            it as? HashMap<*, *>
-                        }?.map { map ->
-                            Ingredient(
-                                amount = (map["amount"] as? Number)?.toFloat() ?: 0f,
-                                unit = map["unit"] as? String,
-                                name = map["name"] as? String ?: "",
-                                substitutes = (map["substitutes"] as? List<*>)?.mapNotNull { it as? String }
-                            )
+                        ingredients = (doc.get("ingredients") as? List<*>)?.mapNotNull { ingredient ->
+                            (ingredient as? Map<*, *>)?.let { map ->
+                                Ingredient(
+                                    amount = (map["amount"] as? Number)?.toFloat() ?: 0f,
+                                    unit = map["unit"] as? String,
+                                    name = map["name"] as? String ?: "",
+                                    substitutes = (map["substitutes"] as? List<*>)?.mapNotNull { sub -> sub as? String }
+                                )
+                            }
                         } ?: emptyList(),
                         preparationSteps = doc.getString("preparationSteps") ?: "",
                         cookingTime = doc.getString("cookingTime") ?: "",
@@ -260,9 +268,9 @@ class RecipeRepository : BaseRepository<Recipe> {
                         isDraft = doc.getBoolean("isDraft") ?: false,
                         authorId = doc.getString("authorId") ?: "",
                         imageRes = doc.getLong("imageRes")?.toInt(),
-                        imageUrl = doc.getString("imageUrl"),
-                        difficulty = doc.getString("difficulty"),
-                        rating = (doc.getDouble("rating")?.toFloat() ?: 0f),
+                        localImagePath = doc.getString("localImagePath"),
+                        difficulty = doc.getString("difficulty") ?: "",
+                        rating = doc.getDouble("rating")?.toFloat() ?: 0f,
                         recipeDescription = doc.getString("recipeDescription") ?: "",
                         calories = Pair(
                             (doc.getDouble("calories.first")?.toFloat() ?: 0f),
@@ -289,6 +297,76 @@ class RecipeRepository : BaseRepository<Recipe> {
             emit(Result.success(recipes))
         } catch (e: Exception) {
             Log.e("RecipeRepository", "Error getting user recipes", e)
+            emit(Result.failure(e))
+        }
+    }
+
+    /**
+     * Gets all favorite recipes for a specific user
+     * @param userId The ID of the user whose favorites to retrieve
+     * @return Flow containing Result with list of favorite recipes
+     */
+    fun getFavoriteRecipes(userId: String): Flow<Result<List<Recipe>>> = flow {
+        try {
+            val snapshot = firestore.collection("favorites")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+            
+            val recipes = snapshot.documents.mapNotNull { doc ->
+                try {
+                    val recipeMap = doc.get("recipe") as? Map<*, *>
+                    recipeMap?.let {
+                        Recipe(
+                            title = it["title"] as? String ?: "",
+                            ingredients = (it["ingredients"] as? List<*>)?.mapNotNull { ingredient ->
+                                (ingredient as? Map<*, *>)?.let { map ->
+                                    Ingredient(
+                                        amount = (map["amount"] as? Number)?.toFloat() ?: 0f,
+                                        unit = map["unit"] as? String,
+                                        name = map["name"] as? String ?: "",
+                                        substitutes = (map["substitutes"] as? List<*>)?.mapNotNull { sub -> sub as? String }
+                                    )
+                                }
+                            } ?: emptyList(),
+                            preparationSteps = it["preparationSteps"] as? String ?: "",
+                            cookingTime = it["cookingTime"] as? String ?: "",
+                            prepTime = it["prepTime"] as? String ?: "",
+                            servingSize = it["servingSize"] as? String ?: "",
+                            categories = (it["categories"] as? List<*>)?.mapNotNull { cat -> cat as? String } ?: emptyList(),
+                            isDraft = it["isDraft"] as? Boolean ?: false,
+                            authorId = it["authorId"] as? String ?: "",
+                            imageRes = (it["imageRes"] as? Number)?.toInt(),
+                            localImagePath = it["localImagePath"] as? String,
+                            difficulty = it["difficulty"] as? String ?: "",
+                            rating = (it["rating"] as? Number)?.toFloat() ?: 0f,
+                            recipeDescription = it["recipeDescription"] as? String ?: "",
+                            calories = Pair(
+                                (it["calories.first"] as? Number)?.toFloat() ?: 0f,
+                                it["calories.second"] as? String ?: "kcal"
+                            ),
+                            fat = Pair(
+                                (it["fat.first"] as? Number)?.toFloat() ?: 0f,
+                                it["fat.second"] as? String ?: "g"
+                            ),
+                            carbs = Pair(
+                                (it["carbs.first"] as? Number)?.toFloat() ?: 0f,
+                                it["carbs.second"] as? String ?: "g"
+                            ),
+                            protein = Pair(
+                                (it["protein.first"] as? Number)?.toFloat() ?: 0f,
+                                it["protein.second"] as? String ?: "g"
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e("RecipeRepository", "Error mapping favorite document: ${doc.id}", e)
+                    null
+                }
+            }
+            emit(Result.success(recipes))
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "Error getting favorite recipes", e)
             emit(Result.failure(e))
         }
     }

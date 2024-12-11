@@ -1,67 +1,58 @@
 package com.example.cookmate.utils
 
 import android.net.Uri
-import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import java.util.UUID
+import android.util.Log
+import com.google.firebase.storage.storageMetadata
 
 /**
- * Manager class for handling image uploads to Firebase Storage
+ * Manages image upload operations to Firebase Storage
  */
-class ImageUploadManager {
+object ImageUploadManager {
     private val storage = FirebaseStorage.getInstance()
-    private val TAG = "ImageUploadManager"
-    
+    private val storageRef = storage.reference
+
     /**
-     * Uploads an image to Firebase Storage
+     * Uploads a recipe image to Firebase Storage
      * @param userId The ID of the user uploading the image
      * @param imageUri The URI of the image to upload
-     * @return The download URL of the uploaded image
+     * @return Result containing the download URL if successful
      */
     suspend fun uploadRecipeImage(userId: String, imageUri: Uri): Result<String> {
         return try {
-            val filename = "${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg"
-            Log.d(TAG, "Starting upload for user: $userId")
-            Log.d(TAG, "File name: $filename")
-            Log.d(TAG, "Image URI: $imageUri")
+            // Create a unique filename
+            val filename = "recipes/${userId}/${UUID.randomUUID()}.jpg"
+            val imageRef = storageRef.child(filename)
 
-            // Create the full path
-            val imagePath = "users/$userId/recipes/images/$filename"
-            Log.d(TAG, "Full storage path: $imagePath")
-
-            val ref = storage.reference.child(imagePath)
-
-            try {
-                Log.d(TAG, "Starting file upload...")
-                // Upload the file bytes
-                val bytes = imageUri.toBytes()
-                Log.d(TAG, "File size: ${bytes.size} bytes")
-                
-                val uploadTask = ref.putBytes(bytes).await()
-                Log.d(TAG, "Upload successful, bytes transferred: ${uploadTask.bytesTransferred}")
-                
-                Log.d(TAG, "Getting download URL...")
-                val downloadUrl = ref.downloadUrl.await()
-                Log.d(TAG, "Download URL obtained: $downloadUrl")
-                
-                Result.success(downloadUrl.toString())
-            } catch (e: Exception) {
-                Log.e(TAG, "Inner upload error", e)
-                throw e
+            // Log the upload attempt
+            Log.d("ImageUploadManager", "Attempting to upload image to: $filename")
+            
+            // Verify the file exists
+            val file = File(imageUri.path ?: "")
+            if (!file.exists()) {
+                Log.e("ImageUploadManager", "File does not exist at: ${imageUri.path}")
+                return Result.failure(Exception("File does not exist"))
             }
+
+            // Upload the file with metadata
+            val metadata = storageMetadata {
+                contentType = "image/jpeg"
+            }
+            
+            // Upload and await result
+            val uploadTask = imageRef.putFile(imageUri, metadata).await()
+            
+            // Get download URL
+            val downloadUrl = imageRef.downloadUrl.await().toString()
+            Log.d("ImageUploadManager", "Successfully uploaded image. URL: $downloadUrl")
+            
+            Result.success(downloadUrl)
         } catch (e: Exception) {
-            Log.e(TAG, "Outer upload error", e)
+            Log.e("ImageUploadManager", "Failed to upload image", e)
             Result.failure(e)
         }
-    }
-
-    /**
-     * Converts a Uri to a ByteArray
-     */
-    private suspend fun Uri.toBytes(): ByteArray {
-        return storage.app.applicationContext.contentResolver
-            .openInputStream(this)?.use { it.readBytes() }
-            ?: throw IllegalStateException("Could not read file")
     }
 } 

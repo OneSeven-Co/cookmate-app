@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
 import com.example.cookmate.data.repository.RecipeRepository
-import com.example.cookmate.utils.ImageUploadManager
 import kotlinx.coroutines.launch
 
 /**
@@ -23,10 +22,6 @@ class CreateViewModel(
 
     private val _saveResult = MutableLiveData<Result<String>>()
     val saveResult: LiveData<Result<String>> = _saveResult
-
-    private val imageUploadManager = ImageUploadManager()
-    private val _uploadResult = MutableLiveData<Result<String>>()
-    val uploadResult: LiveData<Result<String>> = _uploadResult
 
     /**
      * Fetches all available ingredients
@@ -45,20 +40,13 @@ class CreateViewModel(
      */
     fun saveRecipe(recipe: Recipe) {
         viewModelScope.launch {
-            recipeRepository.storeRecipe(recipe).collect { result ->
-                _saveResult.value = result
+            try {
+                recipeRepository.storeRecipe(recipe).collect { result ->
+                    _saveResult.value = result
+                }
+            } catch (e: Exception) {
+                _saveResult.value = Result.failure(e)
             }
-        }
-    }
-
-    /**
-     * Uploads a recipe image to Firebase Storage
-     * @param userId The ID of the user uploading the image
-     * @param imageUri The URI of the image to upload
-     */
-    fun uploadImage(userId: String, imageUri: Uri) {
-        viewModelScope.launch {
-            _uploadResult.value = imageUploadManager.uploadRecipeImage(userId, imageUri)
         }
     }
 } 

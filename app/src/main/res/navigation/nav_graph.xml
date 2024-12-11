@@ -24,10 +24,10 @@
         tools:layout="@layout/fragment_create" />
 
     <fragment
-        android:id="@+id/favoriteFragment"
-        android:name="com.example.cookmate.ui.view.fragment.FavoriteFragment"
+        android:id="@+id/favoritesFragment"
+        android:name="com.example.cookmate.ui.view.fragment.FavoritesFragment"
         android:label="Favorites"
-        tools:layout="@layout/fragment_favorite" />
+        tools:layout="@layout/fragment_favorites" />
 
     <fragment
         android:id="@+id/profileFragment"

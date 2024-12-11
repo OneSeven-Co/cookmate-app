@@ -99,16 +99,19 @@ class ProfileFragment : Fragment() {
     private fun navigateToRecipeDetails(recipe: Recipe) {
         val intent = Intent(requireContext(), RecipeDetailsActivity::class.java).apply {
             putExtra("recipe_name", recipe.title)
+            putExtra("recipe_description", recipe.recipeDescription)
+            putExtra("recipe_image_url", recipe.localImagePath)
             putExtra("recipe_image", recipe.imageRes)
-            putExtra("recipe_difficulty", recipe.difficulty)
-            putExtra("recipe_time", recipe.prepTime)
+            putExtra("recipe_prep_time", recipe.prepTime)
+            putExtra("recipe_time", recipe.cookingTime)
             putExtra("recipe_servings", recipe.servingSize)
-            putExtra("recipe_rating", recipe.rating)
+            putExtra("recipe_preparation_steps", recipe.preparationSteps)
             putExtra("calories", recipe.calories)
             putExtra("fat", recipe.fat)
             putExtra("carbs", recipe.carbs)
             putExtra("protein", recipe.protein)
-            putParcelableArrayListExtra("ingredients", ArrayList(recipe.ingredients))
+            putExtra("ingredients", ArrayList(recipe.ingredients))
+            putExtra("from_profile", true)  
         }
         startActivity(intent)
     }
