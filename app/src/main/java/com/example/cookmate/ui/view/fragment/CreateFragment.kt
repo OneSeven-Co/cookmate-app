@@ -19,7 +19,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
@@ -50,16 +53,45 @@ class CreateFragment : Fragment() {
     }
 
     private val cropImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.let { intent ->
-                val resultUri = UCrop.getOutput(intent)
-                resultUri?.let { uri ->
-                    selectedImageUri = uri
-                    updateImagePreview(uri)
+        try {
+            when (result.resultCode) {
+                Activity.RESULT_OK -> {
+                    result.data?.let { intent ->
+                        val resultUri = UCrop.getOutput(intent)
+                        resultUri?.let { uri ->
+                            Log.d("CreateFragment", "Cropped image URI: $uri")
+                            
+                            // Verify the file exists and has size
+                            val file = File(uri.path ?: "")
+                            if (file.exists() && file.length() > 0) {
+                                selectedImageUri = uri
+                                updateImagePreview(uri)
+                            } else {
+                                Log.e("CreateFragment", "Cropped file invalid: ${uri.path}")
+                                Toast.makeText(context, "Failed to process image", Toast.LENGTH_SHORT).show()
+                                resetImagePreview()
+                            }
+                        } ?: run {
+                            Log.e("CreateFragment", "No output URI from UCrop")
+                            Toast.makeText(context, "Failed to crop image", Toast.LENGTH_SHORT).show()
+                            resetImagePreview()
+                        }
+                    }
+                }
+                UCrop.RESULT_ERROR -> {
+                    val error = result.data?.let { UCrop.getError(it) }
+                    Log.e("CreateFragment", "UCrop error: ${error?.message}", error)
+                    Toast.makeText(context, "Error cropping image: ${error?.message}", Toast.LENGTH_SHORT).show()
+                    resetImagePreview()
+                }
+                else -> {
+                    Log.d("CreateFragment", "Crop cancelled")
+                    resetImagePreview()
                 }
             }
-        } else {
-            // If cropping failed or was cancelled, reset to default state
+        } catch (e: Exception) {
+            Log.e("CreateFragment", "Error handling crop result", e)
+            Toast.makeText(context, "Error processing image: ${e.message}", Toast.LENGTH_SHORT).show()
             resetImagePreview()
         }
     }
@@ -102,22 +134,13 @@ class CreateFragment : Fragment() {
 
         viewModel.saveResult.observe(viewLifecycleOwner) { result ->
             result.onSuccess { _ ->
-                Toast.makeText(context, "Recipe saved successfully!", Toast.LENGTH_LONG).show()
-                // Optionally navigate away or clear form
+                Toast.makeText(context, "Recipe saved successfully!", Toast.LENGTH_SHORT).show()
+                // Clear all inputs
+                clearForm()
+                // Navigate using NavController and update bottom nav
+                findNavController().navigate(R.id.homeFragment)
             }.onFailure { exception ->
                 Toast.makeText(context, "Failed to save recipe: ${exception.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        viewModel.uploadResult.observe(viewLifecycleOwner) { result ->
-            result.onSuccess { url ->
-                createAndSaveRecipe(FirebaseAuth.getInstance().currentUser!!.uid, url, false)
-            }.onFailure { exception ->
-                Toast.makeText(
-                    context,
-                    "Failed to upload image: ${exception.message}",
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     }
@@ -327,17 +350,17 @@ class CreateFragment : Fragment() {
             return
         }
 
-        val firebaseAuth = FirebaseAuth.getInstance().currentUser ?: return
-
-        // If there's an image, upload it first then save recipe
-        if (selectedImageUri != null) {
-            viewModel.uploadImage(firebaseAuth.uid, selectedImageUri!!)
-        } else {
-            createAndSaveRecipe(firebaseAuth.uid, null, draft)
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            Toast.makeText(context, "Please sign in to save recipes", Toast.LENGTH_LONG).show()
+            return
         }
+
+        // Create recipe with local image path
+        createAndSaveRecipe(currentUser.uid, selectedImageUri?.toString(), draft)
     }
 
-    private fun createAndSaveRecipe(userId: String, imageUrl: String?, draft: Boolean) {
+    private fun createAndSaveRecipe(userId: String, localImagePath: String?, draft: Boolean) {
         val recipe = Recipe(
             title = binding.recipeTitleInput.text.toString(),
             ingredients = collectIngredients(),
@@ -350,7 +373,7 @@ class CreateFragment : Fragment() {
             isDraft = draft,
             authorId = userId,
             imageRes = 0,
-            imageUrl = imageUrl,
+            localImagePath = localImagePath,  // Using localImagePath instead of imageUrl
             rating = 5f,
             recipeDescription = binding.descriptionInput.text.toString(),
             calories = binding.caloriesInput.text.toString().toFloat() to "kcal",
@@ -370,9 +393,20 @@ class CreateFragment : Fragment() {
             File(requireContext().cacheDir, "cropped_${System.currentTimeMillis()}.jpg")
         )
 
+        val options = UCrop.Options().apply {
+            setCompressionQuality(80)
+            setToolbarColor(requireContext().getColor(R.color.selectedColor))
+            setStatusBarColor(requireContext().getColor(R.color.black))
+            setToolbarWidgetColor(requireContext().getColor(R.color.white))
+            setCompressionFormat(android.graphics.Bitmap.CompressFormat.JPEG)
+            setHideBottomControls(false)
+            setFreeStyleCropEnabled(true)
+        }
+
         val uCrop = UCrop.of(sourceUri, destinationUri)
-            .withAspectRatio(16f, 9f)  // Match image view aspect ratio
+            .withAspectRatio(16f, 9f)
             .withMaxResultSize(1920, 1080)
+            .withOptions(options)
 
         cropImage.launch(uCrop.getIntent(requireContext()))
     }
@@ -382,10 +416,13 @@ class CreateFragment : Fragment() {
      */
     private fun updateImagePreview(uri: Uri) {
         binding.uploadIcon.scaleType = ImageView.ScaleType.CENTER_CROP
-        binding.uploadText.visibility = View.GONE  // Hide the text when image is selected
+        binding.uploadText.visibility = View.GONE
+        
         Glide.with(this)
             .load(uri)
-            .centerCrop()
+            .transition(DrawableTransitionOptions.withCrossFade())
+            .transform(CenterCrop())
+            .error(R.drawable.ic_upload)
             .into(binding.uploadIcon)
     }
 
@@ -393,7 +430,7 @@ class CreateFragment : Fragment() {
     private fun resetImagePreview() {
         binding.uploadIcon.scaleType = ImageView.ScaleType.CENTER
         binding.uploadIcon.setImageResource(R.drawable.ic_upload)
-        binding.uploadText.visibility = View.VISIBLE  // Show the text when no image
+        binding.uploadText.visibility = View.VISIBLE
         selectedImageUri = null
         tempImageUri = null
     }
@@ -443,6 +480,34 @@ class CreateFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    // Add a new function to clear the form
+    private fun clearForm() {
+        binding.apply {
+            recipeTitleInput.text?.clear()
+            descriptionInput.text?.clear()
+            timeInput.text?.clear()
+            prepTimeInput.text?.clear()
+            servingSizeInput.text?.clear()
+            caloriesInput.text?.clear()
+            fatInput.text?.clear()
+            carbohydratesInput.text?.clear()
+            proteinInput.text?.clear()
+            preparationStepsInput.text?.clear()
+            categoryInput.text?.clear()
+            difficultyInput.text?.clear()
+            
+            // Clear ingredients container
+            ingredientsContainer.removeAllViews()
+            
+            // Reset image
+            resetImagePreview()
+            
+            // Clear selected categories and difficulty
+            selectedCategories.clear()
+            selectedDifficulty = null
+        }
     }
 }
 
