@@ -8,22 +8,29 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.cookmate.R
-import com.example.cookmate.data.firebase.FirebaseMethods.getAllIngredients
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
+import com.example.cookmate.data.repository.RecipeRepository
 import com.example.cookmate.databinding.FragmentCreateBinding
 import com.example.cookmate.databinding.ItemIngredientBinding
+import com.example.cookmate.ui.viewmodel.CreateViewModel
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
-import com.example.cookmate.data.firebase.FirebaseMethods.storeRecipe
 
 class CreateFragment : Fragment() {
     private var _binding: FragmentCreateBinding? = null
     private val binding get() = _binding!!
     private val selectedCategories = mutableListOf<String>()
     private var selectedDifficulty: String? = null
-    private lateinit var ingredientsList: List<Ingredient>
+    private var ingredientsList: List<Ingredient> = emptyList()
+
+    private val viewModel: CreateViewModel by viewModels { 
+        CreateViewModelFactory(RecipeRepository()) 
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -35,12 +42,32 @@ class CreateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupObservers()
         setupCategoryDropdown()
         setupDifficultyDropdown()
         setupAddIngredientButton()
         setupImageUpload()
         setupSaveRecipeButton()
         setupSaveAndPublishButton()
+    }
+
+    private fun setupObservers() {
+        viewModel.ingredients.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { ingredients ->
+                ingredientsList = ingredients
+            }.onFailure { exception ->
+                Toast.makeText(context, "Failed to load ingredients: ${exception.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        viewModel.saveResult.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { _ ->
+                Toast.makeText(context, "Recipe saved successfully!", Toast.LENGTH_LONG).show()
+                // Optionally navigate away or clear form
+            }.onFailure { exception ->
+                Toast.makeText(context, "Failed to save recipe: ${exception.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun setupImageUpload() {
@@ -113,8 +140,10 @@ class CreateFragment : Fragment() {
         binding.addIngredientButton.setOnClickListener {
             addNewIngredientField()
         }
+        
+        // Load ingredients and add first field
+        viewModel.getAllIngredients()
         addNewIngredientField()
-
     }
 
     // Add new ingredient input field
@@ -125,43 +154,14 @@ class CreateFragment : Fragment() {
         // Setup remove button
         ingredientBinding.removeIngredientButton.setOnClickListener {
             binding.ingredientsContainer.removeView(ingredientView)
-            binding.addIngredientButton.isEnabled = binding.ingredientsContainer.childCount >= 0
+            binding.addIngredientButton.isEnabled = true
         }
 
-        binding.addIngredientButton.isEnabled = false
-
-        //TODO: This is where we should call for the ingredients list
-
-        getAllIngredients { ingredients ->
-            // Extract ingredient names
-            val ingredientNames = ingredients.map { it.name.lowercase() }
-            ingredientsList = ingredients
-
-            // Set up the adapter with the ingredient names
-            val adapter = ArrayAdapter(
-                ingredientView.context,
-                android.R.layout.simple_dropdown_item_1line,
-                ingredientNames
-            )
-            ingredientBinding.ingredientNameInput.setAdapter(adapter)
-            ingredientBinding.ingredientNameInput.threshold = 1
-
-            // Disable button when the user gives invalid input
-            ingredientBinding.ingredientNameInput.setOnFocusChangeListener { _, hasFocus ->
-                if (!hasFocus) { // User finished editing
-                    val input = ingredientBinding.ingredientNameInput.text.toString().lowercase()
-                    if (!ingredientNames.contains(input)) {
-                        // Clear invalid input
-                        ingredientBinding.ingredientNameInput.setText("")
-                        ingredientBinding.ingredientNameInput.error = "Please select a valid option."
-                    } else {
-                        binding.addIngredientButton.isEnabled = true
-                    }
-                }
-            }
-        }
-
+        // Add the view
         binding.ingredientsContainer.addView(ingredientView)
+        
+        // Always enable the add button
+        binding.addIngredientButton.isEnabled = true
     }
 
     // Collect ingredients from input fields
@@ -173,29 +173,30 @@ class CreateFragment : Fragment() {
 
             val name = ingredientBinding.ingredientNameInput.text.toString()
             val quantityString = ingredientBinding.ingredientQuantityInput.text.toString()
-            var quantity = 0f
-            if (quantityString.isBlank()) {
-                quantity = 0f
-            }else {
-                quantity = quantityString.toFloat()
+            
+            // Skip empty fields
+            if (name.isBlank() || quantityString.isBlank()) {
+                continue
             }
 
-            val currentIngredient = ingredientsList.find { it.name == name }
-            Log.d("current", currentIngredient.toString())
-            Log.d("name", name)
-            Log.d("quantity", quantity.toString())
-
-            if (name.isNotBlank()) {
-                if (currentIngredient != null) {
-                    ingredients.add(Ingredient(
-                        amount = quantity,
-                        unit = currentIngredient.unit,
-                        name = name,
-                        substitutes = currentIngredient.substitutes
-                    ))
-                }
+            val quantity = quantityString.toFloatOrNull() ?: 0f
+            
+            // Try to find existing ingredient
+            val currentIngredient = ingredientsList.find { 
+                it.name.equals(name, ignoreCase = true) 
             }
+
+            // Create ingredient whether it exists in the list or not
+            ingredients.add(
+                Ingredient(
+                    amount = quantity,
+                    unit = currentIngredient?.unit ?: "units", // Default unit if not found
+                    name = name,
+                    substitutes = currentIngredient?.substitutes ?: emptyList()
+                )
+            )
         }
+        
         Log.d("ingredients", ingredients.toString())
         return ingredients
     }
@@ -273,7 +274,7 @@ class CreateFragment : Fragment() {
 
         val firebaseAuth = FirebaseAuth.getInstance()
         val user = firebaseAuth.currentUser
-        // Create recipe object
+        
         if (user != null) {
             val recipe = Recipe(
                 title = binding.recipeTitleInput.text.toString(),
@@ -295,18 +296,27 @@ class CreateFragment : Fragment() {
                 protein = binding.proteinInput.text.toString().toFloat() to "Grams"
             )
 
-            storeRecipe(recipe) { result ->
-                if (result) {
-                    Toast.makeText(context, "Recipe saved successfully!", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(context, "Failed to save recipe.", Toast.LENGTH_LONG).show()
-                }
-            }
+            viewModel.saveRecipe(recipe)
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+}
+
+/**
+ * Factory for creating CreateViewModel instances
+ */
+class CreateViewModelFactory(
+    private val recipeRepository: RecipeRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CreateViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return CreateViewModel(recipeRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

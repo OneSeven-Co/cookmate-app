@@ -24,4 +24,15 @@ class MainActivity : AppCompatActivity() {
         // Set up bottom navigation
         binding.bottomNavigation.setupWithNavController(navController)
     }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // If user presses back in MainActivity, don't go back to login screens
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            super.onBackPressed()
+        } else {
+            // Either move task to back or show exit dialog
+            moveTaskToBack(true)
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.cookmate.ui.view.activity
 
+import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,7 @@ import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.databinding.ActivityRecipeDetailsBinding
 import com.example.cookmate.ui.adapter.IngredientsAdapter
+import java.io.Serializable
 
 class RecipeDetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityRecipeDetailsBinding
@@ -37,6 +40,15 @@ class RecipeDetailsActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
         }
 
+        // Helper function to get serializable data from intent
+        // This is needed because getSerializableExtra is not available in Android 12
+        fun <T : Serializable?> getSerializable(activity: Activity, name: String, clazz: Class<T>): T {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                activity.intent.getSerializableExtra(name, clazz)!!
+            else
+                activity.intent.getSerializableExtra(name) as T
+        }
+
         // Get recipe details from intent
         intent.extras?.let { bundle ->
             binding.recipeName.text = bundle.getString("recipe_name", "")
@@ -46,7 +58,7 @@ class RecipeDetailsActivity : AppCompatActivity() {
             binding.prepTimeValue.text = bundle.getString("recipe_time", "N/A")
             binding.servingSizeValue.text = bundle.getString("recipe_servings", "N/A")
 
-            val ingredients = bundle.getParcelableArrayList<Ingredient>("ingredients") ?: emptyList()
+            val ingredients = getSerializable(this, "ingredients", ArrayList::class.java) as ArrayList<Ingredient>
             Log.d("ingredients size", "${ingredients.size}")
             ingredientsAdapter = IngredientsAdapter(ingredients)
         }

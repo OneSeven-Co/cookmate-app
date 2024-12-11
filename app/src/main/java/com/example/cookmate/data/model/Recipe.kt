@@ -26,10 +26,17 @@ data class Recipe(
     val protein: Pair<Float, String>,
 )
 
+/**
+ * Represents an ingredient in a recipe
+ * @property amount The quantity of the ingredient
+ * @property unit The unit of measurement (can be null for items like "1 whole apple")
+ * @property name The name of the ingredient
+ * @property substitutes Optional list of possible substitute ingredients
+ */
 @Parcelize
 data class Ingredient(
-    val amount: Float = 0f, //Initialized to 0, must be > 0 when submitting recipes in creation
-    val unit: String? = "", //Nullable just to prevent awkward units (what's the unit of measurement for "1 melon"?)
+    val amount: Float = 0f,
+    val unit: String? = "",
     val name: String = "",
-    val substitutes: List<String>? = emptyList(), //Will populate with Ingredient names in Firestore in a relational manner and load clientside with a query
+    val substitutes: List<String>? = emptyList()
 ) : Parcelable

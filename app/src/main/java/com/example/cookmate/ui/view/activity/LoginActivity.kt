@@ -1,139 +1,112 @@
 package com.example.cookmate.ui.view.activity
 
 import android.content.Intent
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import android.widget.Toast
-import com.example.cookmate.MainActivity
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import com.example.cookmate.databinding.ActivityLoginBinding
 import com.example.cookmate.ui.viewmodel.LoginViewModel
-import com.example.cookmate.ui.login.LoginViewModelFactory
-
-import com.google.firebase.auth.FirebaseAuth
+import com.example.cookmate.data.repository.AuthRepository
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModel
+import com.example.cookmate.MainActivity
 
 class LoginActivity : AppCompatActivity() {
-
-    private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var firebaseAuth: FirebaseAuth
+    
+    private val viewModel: LoginViewModel by viewModels { 
+        LoginViewModelFactory(AuthRepository()) 
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        firebaseAuth = FirebaseAuth.getInstance()
+        setupTextChangeListeners()
+        setupClickListeners()
+        observeViewModel()
+    }
 
-        val email = binding.emailField
-        val password = binding.passwordField
-        val loginButton = binding.signInButton
-        val signUpLink = binding.signUpLink
-
-        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
-
-        loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
-            val loginState = it ?: return@Observer
-
-            // Disable login button unless both email/password are valid
-            loginButton.isEnabled = loginState.isDataValid
-
-            if (loginState.usernameError != null) {
-                email.error = getString(loginState.usernameError)
-            }
-            if (loginState.passwordError != null) {
-                password.error = getString(loginState.passwordError)
-            }
-        })
-
-        email.afterTextChanged {
-            loginViewModel.loginDataChanged(
-                email.text.toString(),
-                password.text.toString()
+    private fun setupTextChangeListeners() {
+        binding.emailField.doAfterTextChanged { text ->
+            viewModel.loginDataChanged(
+                text.toString(),
+                binding.passwordField.text.toString()
             )
         }
 
-        password.apply {
-            afterTextChanged {
-                loginViewModel.loginDataChanged(
-                    email.text.toString(),
-                    password.text.toString()
-                )
-            }
+        binding.passwordField.doAfterTextChanged { text ->
+            viewModel.loginDataChanged(
+                binding.emailField.text.toString(),
+                text.toString()
+            )
+        }
+    }
 
-            setOnEditorActionListener { _, actionId, _ ->
-                when (actionId) {
-                    EditorInfo.IME_ACTION_DONE ->
-                        loginViewModel.login(
-                            email.text.toString(),
-                            password.text.toString()
-                        )
-                }
-                false
+    private fun setupClickListeners() {
+        binding.signInButton.setOnClickListener {
+            viewModel.login(
+                binding.emailField.text.toString(),
+                binding.passwordField.text.toString()
+            )
+        }
+
+        binding.signUpLink.setOnClickListener {
+            // Navigate to SignUp activity
+            startActivity(Intent(this, SignUpActivity::class.java))
+            // Don't finish this activity so user can come back
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.loginFormState.observe(this) { formState ->
+            binding.signInButton.isEnabled = formState.isDataValid
+            
+            // Clear previous errors
+            binding.emailInputLayout.error = null
+            binding.passwordInputLayout.error = null
+            
+            // Set new errors if any
+            formState.emailError?.let {
+                binding.emailInputLayout.error = it
+            }
+            
+            formState.passwordError?.let {
+                binding.passwordInputLayout.error = it
             }
         }
 
-        loginButton.setOnClickListener {
-            val emailText = email.text.toString()
-            val passwordText = password.text.toString()
-
-            if (emailText.isEmpty() || passwordText.isEmpty()) {
-                // Show error if fields are empty
-                if (emailText.isEmpty()) email.error = "Email cannot be empty"
-                if (passwordText.isEmpty()) password.error = "Password cannot be empty"
-                return@setOnClickListener
+        viewModel.loginResult.observe(this) { result ->
+            result.onSuccess { user ->
+                // Navigate to MainActivity
+                startActivity(Intent(this, MainActivity::class.java))
+                // Finish both LoginActivity and WelcomeActivity
+                finishAffinity()
+            }.onFailure { exception ->
+                Toast.makeText(
+                    this,
+                    "Login failed: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-
-            firebaseAuth.signInWithEmailAndPassword(emailText, passwordText)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Sign-in success, navigate to MainActivity
-                        val user = firebaseAuth.currentUser
-                        if (user != null) {
-                            // User is signed in
-                            Toast.makeText(this, "Welcome, ${user.email}", Toast.LENGTH_LONG).show()
-
-                            val intent = Intent(this, MainActivity::class.java)
-                            startActivity(intent)
-                            finish()
-                        }
-                    } else {
-                        // Sign-in failed, show error message
-                        val errorMessage = task.exception?.message ?: "Login failed"
-                        // Display the error to the user
-                        password.error = errorMessage
-                    }
-                }
-        }
-
-
-        // Navigate to SignUpActivity when "Sign Up" is clicked
-        signUpLink.setOnClickListener {
-            val intent = Intent(this, SignUpActivity::class.java)
-            startActivity(intent)
         }
     }
 }
 
 /**
- * Extension function to simplify setting an afterTextChanged action to EditText components.
+ * Factory for creating LoginViewModel instances
  */
-fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
-    this.addTextChangedListener(object : TextWatcher {
-        override fun afterTextChanged(editable: Editable?) {
-            afterTextChanged.invoke(editable.toString())
+class LoginViewModelFactory(
+    private val authRepository: AuthRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return LoginViewModel(authRepository) as T
         }
-
-        // Unused methods
-        override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-        // Unused methods
-        override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-    })
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }
