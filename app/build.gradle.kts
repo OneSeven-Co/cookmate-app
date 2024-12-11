@@ -100,5 +100,4 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     implementation(libs.google.firebase.auth.ktx)
     implementation(libs.google.firebase.firestore.ktx)
-
 }
