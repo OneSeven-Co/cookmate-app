@@ -52,7 +52,11 @@ class RecipeDetailsActivity : AppCompatActivity() {
 
         // Get recipe details from intent
         intent.extras?.let { bundle ->
+            // Recipe basic info
             binding.recipeName.text = bundle.getString("recipe_name", "")
+            binding.recipeDescription.text = bundle.getString("recipe_description", "")
+
+            // Image handling
             val imageUrl = bundle.getString("recipe_image_url")
             if (imageUrl != null) {
                 Glide.with(this)
@@ -65,13 +69,28 @@ class RecipeDetailsActivity : AppCompatActivity() {
                 )
             }
 
-            // Set cooking info
-            binding.prepTimeValue.text = bundle.getString("recipe_time", "N/A")
+            // Cooking info
+            binding.prepTimeValue.text = bundle.getString("recipe_prep_time", "N/A")
+            binding.cookingTimeValue.text = bundle.getString("recipe_time", "N/A")
             binding.servingSizeValue.text = bundle.getString("recipe_servings", "N/A")
 
+            // Nutrition info
+            val calories = bundle.getSerializable("calories") as? Pair<Float, String>
+            val fat = bundle.getSerializable("fat") as? Pair<Float, String>
+            val carbs = bundle.getSerializable("carbs") as? Pair<Float, String>
+            val protein = bundle.getSerializable("protein") as? Pair<Float, String>
+
+            binding.caloriesText.text = "Calories: ${calories?.first ?: 0} ${calories?.second ?: "kcal"}"
+            binding.fatText.text = "Fat: ${fat?.first ?: 0} ${fat?.second ?: "g"}"
+            binding.carbsText.text = "Carbohydrates: ${carbs?.first ?: 0} ${carbs?.second ?: "g"}"
+            binding.proteinText.text = "Protein: ${protein?.first ?: 0} ${protein?.second ?: "g"}"
+
+            // Ingredients
             val ingredients = getSerializable(this, "ingredients", ArrayList::class.java) as ArrayList<Ingredient>
-            Log.d("ingredients size", "${ingredients.size}")
             ingredientsAdapter = IngredientsAdapter(ingredients)
+            
+            // Preparation steps
+            binding.preparationSteps.text = bundle.getString("recipe_preparation_steps", "")
         }
         ingredientsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@RecipeDetailsActivity)

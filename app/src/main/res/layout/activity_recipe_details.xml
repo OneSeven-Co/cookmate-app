@@ -174,27 +174,27 @@
                 android:layout_marginBottom="8dp"/>
 
             <TextView
+                android:id="@+id/caloriesText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Calories: (number)"
                 android:layout_marginBottom="4dp"/>
 
             <TextView
+                android:id="@+id/fatText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Fat: (number)"
                 android:layout_marginBottom="4dp"/>
 
             <TextView
+                android:id="@+id/carbsText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Carbohydrates: (number)"
                 android:layout_marginBottom="4dp"/>
 
             <TextView
+                android:id="@+id/proteinText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Protein: (number)"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
@@ -240,7 +240,16 @@
                 android:layout_marginBottom="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="@android:color/darker_gray"/>
+                app:strokeColor="@android:color/darker_gray">
+
+                <TextView
+                    android:id="@+id/preparationSteps"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp"
+                    android:scrollbars="vertical"/>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Action Buttons -->
             <LinearLayout
