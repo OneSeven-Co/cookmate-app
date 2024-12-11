@@ -2,124 +2,124 @@ package com.example.cookmate.ui.view.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Patterns
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.cookmate.MainActivity
 import com.example.cookmate.R
-import com.example.cookmate.data.firebase.FirebaseMethods.createUser
-import com.example.cookmate.ui.view.fragment.HomeFragment
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.cookmate.databinding.ActivitySignUpBinding
+import com.example.cookmate.ui.viewmodel.SignUpViewModel
+import com.example.cookmate.data.repository.AuthRepository
+import com.example.cookmate.data.repository.UserRepository
+import com.example.cookmate.data.model.User
 
+/**
+ * Activity handling user registration
+ */
 class SignUpActivity : AppCompatActivity() {
-
-    private lateinit var auth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
-
-    private lateinit var usernameField: TextInputEditText
-    private lateinit var emailField: TextInputEditText
-    private lateinit var passwordField: TextInputEditText
-    private lateinit var signupButton: MaterialButton
-    private lateinit var errorTextView: TextView
-    private lateinit var loginText: TextView
-    private lateinit var termsAndServiceText: TextView
+    private lateinit var binding: ActivitySignUpBinding
+    
+    private val viewModel: SignUpViewModel by viewModels { 
+        SignUpViewModelFactory(AuthRepository(), UserRepository()) 
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_up)
+        binding = ActivitySignUpBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
-        firestore = FirebaseFirestore.getInstance()
+        setupTextChangeListeners()
+        setupClickListeners()
+        observeViewModel()
+    }
 
-        usernameField = findViewById(R.id.usernameField)
-        emailField = findViewById(R.id.emailField)
-        passwordField = findViewById(R.id.passwordField)
-        signupButton = findViewById(R.id.signupButton)
-        errorTextView = findViewById(R.id.loginLink)
-        loginText = findViewById(R.id.loginText)
-        termsAndServiceText = findViewById(R.id.termsAndServiceText)
+    private fun setupTextChangeListeners() {
+        val afterTextChangedListener = { 
+            viewModel.signUpDataChanged(
+                binding.usernameField.text.toString(),
+                binding.emailField.text.toString(),
+                binding.passwordField.text.toString()
+            )
+        }
 
-        signupButton.setOnClickListener {
-            val username = usernameField.text.toString().trim()
-            val email = emailField.text.toString().trim()
-            val password = passwordField.text.toString().trim()
+        binding.usernameField.doAfterTextChanged { afterTextChangedListener() }
+        binding.emailField.doAfterTextChanged { afterTextChangedListener() }
+        binding.passwordField.doAfterTextChanged { afterTextChangedListener() }
+    }
 
-            if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, R.string.error_empty_fields, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+    private fun setupClickListeners() {
+        binding.signupButton.setOnClickListener {
+            viewModel.signUp(
+                binding.emailField.text.toString(),
+                binding.passwordField.text.toString(),
+                binding.usernameField.text.toString()
+            )
+        }
 
-            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Toast.makeText(this, R.string.error_invalid_email, Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            checkIfUsernameExists(username, email, password)
+        binding.loginLink.setOnClickListener {
+            finish()
         }
     }
 
-    private fun checkIfUsernameExists(username: String, email: String, password: String) {
-        firestore.collection("users")
-            .whereEqualTo("username", username)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (!querySnapshot.isEmpty) {
-                    Toast.makeText(this, R.string.error_name_taken, Toast.LENGTH_LONG).show()
-                } else {
-                    createUser(
-                        email, password, username,
-                        onComplete = { navigateToHomeScreen() }
-                    )
-                }
-            }
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "${R.string.check_error}${exception.message}", Toast.LENGTH_LONG).show()
-            }
-    }
+    private fun observeViewModel() {
+        viewModel.formState.observe(this) { formState ->
+            binding.signupButton.isEnabled = formState.isDataValid
 
-    private fun fireStoreUserInit(userId: String, username: String) {
-        val userMap = hashMapOf(
-            "username" to username,
-            "favouriteRecipes" to emptyList<String>(),
-            "createdRecipes" to emptyList<String>(),
-            "authLevel" to "User"
-        )
+            // Clear previous errors
+            binding.usernameInputLayout.error = null
+            binding.emailInputLayout.error = null
+            binding.passwordInputLayout.error = null
 
-        firestore.collection("users").document(userId)
-            .set(userMap)
-            .addOnSuccessListener {
+            // Set new errors if any
+            formState.usernameError?.let {
+                binding.usernameInputLayout.error = it
+            }
+            formState.emailError?.let {
+                binding.emailInputLayout.error = it
+            }
+            formState.passwordError?.let {
+                binding.passwordInputLayout.error = it
+            }
+            formState.error?.let {
+                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        viewModel.signUpResult.observe(this) { result ->
+            result.onSuccess {
                 Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-                navigateToHomeScreen()
-            }
-            .addOnFailureListener { exception: Exception ->
-                Toast.makeText(this, "Failed to save username: ${exception.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun handleSignUpError(exception: Exception?) {
-        errorTextView.visibility = View.VISIBLE
-        when (exception) {
-            is FirebaseAuthUserCollisionException -> {
-                Toast.makeText(this, R.string.error_user_exists, Toast.LENGTH_LONG).show()
-            }
-            is FirebaseAuthInvalidCredentialsException -> {
-                Toast.makeText(this, R.string.error_invalid_email, Toast.LENGTH_LONG).show()
-            }
-            else -> {
-                Toast.makeText(this, R.string.error_unknown, Toast.LENGTH_LONG).show()
+                // Navigate to MainActivity
+                startActivity(Intent(this, MainActivity::class.java))
+                // Finish all previous activities
+                finishAffinity()
+            }.onFailure { exception ->
+                Toast.makeText(
+                    this,
+                    "Sign up failed: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
 
-    private fun navigateToHomeScreen() {
-        val homeIntent = Intent(this, HomeFragment::class.java)
-        startActivity(homeIntent)
-        finish()
+    /**
+     * Factory for creating SignUpViewModel instances
+     * @property authRepository Repository for authentication operations
+     * @property userRepository Repository for user operations
+     */
+    class SignUpViewModelFactory(
+        private val authRepository: AuthRepository,
+        private val userRepository: UserRepository
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(SignUpViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return SignUpViewModel(authRepository, userRepository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }
