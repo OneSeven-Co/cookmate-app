@@ -14,19 +14,19 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.cookmate.R
 import com.example.cookmate.data.model.Ingredient
 import com.example.cookmate.data.model.Recipe
+import com.example.cookmate.data.repository.RecipeRepository
 import com.example.cookmate.databinding.FragmentCreateBinding
 import com.example.cookmate.databinding.ItemIngredientBinding
+import com.example.cookmate.ui.viewmodel.CreateViewModel
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
-import com.example.cookmate.data.repository.RecipeRepository
-import com.example.cookmate.ui.viewmodel.CreateViewModel
 
 class CreateFragment : Fragment() {
     private var _binding: FragmentCreateBinding? = null
     private val binding get() = _binding!!
     private val selectedCategories = mutableListOf<String>()
     private var selectedDifficulty: String? = null
-    private lateinit var ingredientsList: List<Ingredient>
+    private var ingredientsList: List<Ingredient> = emptyList()
 
     private val viewModel: CreateViewModel by viewModels { 
         CreateViewModelFactory(RecipeRepository()) 
@@ -55,8 +55,6 @@ class CreateFragment : Fragment() {
         viewModel.ingredients.observe(viewLifecycleOwner) { result ->
             result.onSuccess { ingredients ->
                 ingredientsList = ingredients
-                // Update ingredient input fields with the new data
-                updateIngredientInputs(ingredients)
             }.onFailure { exception ->
                 Toast.makeText(context, "Failed to load ingredients: ${exception.message}", Toast.LENGTH_LONG).show()
             }
@@ -69,25 +67,6 @@ class CreateFragment : Fragment() {
             }.onFailure { exception ->
                 Toast.makeText(context, "Failed to save recipe: ${exception.message}", Toast.LENGTH_LONG).show()
             }
-        }
-    }
-
-    private fun updateIngredientInputs(ingredients: List<Ingredient>) {
-        // Extract ingredient names
-        val ingredientNames = ingredients.map { it.name.lowercase() }
-
-        // Update existing ingredient input fields
-        for (i in 0 until binding.ingredientsContainer.childCount) {
-            val ingredientView = binding.ingredientsContainer.getChildAt(i)
-            val ingredientBinding = ItemIngredientBinding.bind(ingredientView)
-
-            // Set up the adapter with the ingredient names
-            val adapter = ArrayAdapter(
-                ingredientView.context,
-                android.R.layout.simple_dropdown_item_1line,
-                ingredientNames
-            )
-            ingredientBinding.ingredientNameInput.setAdapter(adapter)
         }
     }
 
@@ -161,8 +140,10 @@ class CreateFragment : Fragment() {
         binding.addIngredientButton.setOnClickListener {
             addNewIngredientField()
         }
+        
+        // Load ingredients and add first field
+        viewModel.getAllIngredients()
         addNewIngredientField()
-
     }
 
     // Add new ingredient input field
@@ -173,15 +154,14 @@ class CreateFragment : Fragment() {
         // Setup remove button
         ingredientBinding.removeIngredientButton.setOnClickListener {
             binding.ingredientsContainer.removeView(ingredientView)
-            binding.addIngredientButton.isEnabled = binding.ingredientsContainer.childCount >= 0
+            binding.addIngredientButton.isEnabled = true
         }
 
-        binding.addIngredientButton.isEnabled = false
-
-        // Fetch ingredients if not already loaded
-        viewModel.getAllIngredients()
-
+        // Add the view
         binding.ingredientsContainer.addView(ingredientView)
+        
+        // Always enable the add button
+        binding.addIngredientButton.isEnabled = true
     }
 
     // Collect ingredients from input fields
@@ -193,29 +173,30 @@ class CreateFragment : Fragment() {
 
             val name = ingredientBinding.ingredientNameInput.text.toString()
             val quantityString = ingredientBinding.ingredientQuantityInput.text.toString()
-            var quantity = 0f
-            if (quantityString.isBlank()) {
-                quantity = 0f
-            }else {
-                quantity = quantityString.toFloat()
+            
+            // Skip empty fields
+            if (name.isBlank() || quantityString.isBlank()) {
+                continue
             }
 
-            val currentIngredient = ingredientsList.find { it.name == name }
-            Log.d("current", currentIngredient.toString())
-            Log.d("name", name)
-            Log.d("quantity", quantity.toString())
-
-            if (name.isNotBlank()) {
-                if (currentIngredient != null) {
-                    ingredients.add(Ingredient(
-                        amount = quantity,
-                        unit = currentIngredient.unit,
-                        name = name,
-                        substitutes = currentIngredient.substitutes
-                    ))
-                }
+            val quantity = quantityString.toFloatOrNull() ?: 0f
+            
+            // Try to find existing ingredient
+            val currentIngredient = ingredientsList.find { 
+                it.name.equals(name, ignoreCase = true) 
             }
+
+            // Create ingredient whether it exists in the list or not
+            ingredients.add(
+                Ingredient(
+                    amount = quantity,
+                    unit = currentIngredient?.unit ?: "units", // Default unit if not found
+                    name = name,
+                    substitutes = currentIngredient?.substitutes ?: emptyList()
+                )
+            )
         }
+        
         Log.d("ingredients", ingredients.toString())
         return ingredients
     }
